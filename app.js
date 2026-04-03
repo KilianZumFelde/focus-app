@@ -805,7 +805,8 @@ function saveTask() {
 function addGoalLongPress(card, goalId) {
   let holdTimer = null;
 
-  card.addEventListener('touchstart', () => {
+  card.addEventListener('touchstart', (e) => {
+    if (e.target.closest('.drag-handle')) return;
     holdTimer = setTimeout(() => {
       holdTimer = null;
       const existing = card.querySelector('.goal-delete-popup');
@@ -849,7 +850,8 @@ function addGoalLongPress(card, goalId) {
 function addThisWeekLongPress(card, task) {
   let holdTimer = null;
 
-  card.addEventListener('touchstart', () => {
+  card.addEventListener('touchstart', (e) => {
+    if (e.target.closest('.drag-handle')) return;
     holdTimer = setTimeout(() => {
       holdTimer = null;
       showThisWeekPopup(card, task);
