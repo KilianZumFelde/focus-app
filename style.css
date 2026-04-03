@@ -821,6 +821,8 @@ input[type="number"]:focus {
 
   .area-screen-card-add .area-screen-card-name {
     color: var(--text-secondary);
+    display: block;
+    width: 100%;
     text-align: center;
   }
 
