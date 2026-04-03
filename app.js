@@ -389,7 +389,7 @@ function renderTasks() {
     }
 
     if (isDraggable) {
-      addDragHandlers(card, task.id);
+      if (!isMobile()) addDragHandlers(card, task.id);
       addTouchDragHandlers(card, task.id, 'task', card.querySelector('.drag-handle'));
     }
     taskList.appendChild(card);
