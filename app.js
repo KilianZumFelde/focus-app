@@ -891,8 +891,9 @@ function renderAreasScreen() {
     card.style.borderLeftColor = area.color;
     card.innerHTML = `<span class="area-screen-card-name">${escapeHtml(area.name)}</span>`;
 
-    // Quick tap animation then navigate
+    // Quick tap animation then navigate (skip if delete popup is open)
     card.addEventListener('click', () => {
+      if (card.querySelector('.area-delete-popup')) return;
       card.classList.add('area-card-tapped');
       setTimeout(() => {
         hideAreasScreen();

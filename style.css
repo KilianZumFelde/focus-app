@@ -814,13 +814,14 @@ input[type="number"]:focus {
 
   .area-screen-card-add {
     border-left-color: transparent;
-    margin-top: 28px;
     box-shadow: none;
     border: 1px dashed var(--border);
+    justify-content: center;
   }
 
   .area-screen-card-add .area-screen-card-name {
     color: var(--text-secondary);
+    text-align: center;
   }
 
   /* Long-press delete popup */
