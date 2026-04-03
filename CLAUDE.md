@@ -22,7 +22,7 @@ For mobile: host over HTTPS and install as PWA via browser "Add to Home Screen".
 ## Key concepts
 - **Focus Areas** — user-defined categories (Finances, Health, Social, Job, Misc + custom). Each has a unique soft color. Long-press (600ms) on mobile to delete with confirmation.
 - **Tasks** — belong to an area. Have a title, done/not-done status, and a "this week" flag. No description, no editing after creation. Long-press in This Week view to remove from week; long-press in area view to add/remove from This Week.
-- **Weekly Goals** — recurring tasks with a counter + target threshold (e.g. 3/6). Reset every Monday. Belong to an area. Appear at the top of This Week and area views, above tasks, separated by a divider. No editing or deleting after creation.
+- **Weekly Goals** — recurring tasks with a counter + target threshold (e.g. 3/6). Reset every Monday. Belong to an area. Appear at the top of This Week and area views, above tasks, separated by a divider. Long-press to delete. When target is reached, +/− buttons hide and card shows as done.
 - **Views** — This Week (all goals + flagged tasks), per-area (area goals + area tasks), All Tasks, Completed (archive)
 - **Color coding** — each area has a unique color generated procedurally using the golden angle (137.5°) to spread hues evenly around the color wheel. Fixed saturation (45%) and lightness (78%) keep all colors soft/pastel. No ceiling — works for any number of areas.
 - **Drag-and-drop reordering** — available for tasks in This Week and area views (not in All Tasks or Completed)
@@ -38,7 +38,7 @@ For mobile: host over HTTPS and install as PWA via browser "Add to Home Screen".
 ## Decisions made
 - No due dates or subtasks (out of scope for v1)
 - Drag-and-drop reordering is supported in This Week and area views (mouse on desktop, touch on mobile)
-- Touch drag uses a 300ms hold delay to distinguish from scrolling; works for both tasks and goals
+- Touch drag uses a ≡ handle on the right of each card — activates instantly with no delay, no conflict with long-press
 - Goals can be reordered across the full goal list (not scoped to area)
 - Deleting an area with tasks shows a confirmation warning
 - Completed tasks are fully separate from active tasks

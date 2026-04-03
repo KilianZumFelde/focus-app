@@ -406,6 +406,7 @@ body {
 
 /* ─── Goal card ─────────────────────────────────────────────────────────────── */
 .goal-card {
+  position: relative;
   background: var(--surface);
   border-radius: var(--radius);
   border-left: 4px solid #ddd;
@@ -531,6 +532,17 @@ input[type="number"] {
 
 input[type="number"]:focus {
   border-color: var(--text-primary);
+}
+
+/* ─── Drag handle ───────────────────────────────────────────────────────────── */
+.drag-handle {
+  font-size: 16px;
+  color: var(--text-muted);
+  cursor: grab;
+  padding: 0 4px;
+  flex-shrink: 0;
+  user-select: none;
+  touch-action: none;
 }
 
 /* ─── Touch drag ────────────────────────────────────────────────────────────── */
@@ -826,7 +838,8 @@ input[type="number"]:focus {
     color: var(--text-secondary);
   }
 
-  /* Long-press popups (area delete + this week toggle) */
+  /* Long-press popups (area delete + this week toggle + goal delete) */
+  .goal-delete-popup,
   .thisweek-popup,
   .area-delete-popup {
     position: absolute;

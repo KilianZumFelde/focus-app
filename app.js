@@ -218,15 +218,21 @@ function renderGoals(taskList) {
           </div>
           <div class="task-meta">${buildAreaTag(area)}</div>
         </div>
-        <div class="goal-counter">
-          <button class="counter-btn decrement-btn" data-goal-id="${goal.id}" ${goal.count <= 0 ? 'disabled' : ''}>−</button>
-          <span class="counter-display">${goal.count} / ${goal.target}</span>
-          <button class="counter-btn increment-btn" data-goal-id="${goal.id}">+</button>
-        </div>
+        ${isDone ? `
+          <span class="counter-display">✓ ${goal.count} / ${goal.target}</span>
+        ` : `
+          <div class="goal-counter">
+            <button class="counter-btn decrement-btn" data-goal-id="${goal.id}" ${goal.count <= 0 ? 'disabled' : ''}>−</button>
+            <span class="counter-display">${goal.count} / ${goal.target}</span>
+            <button class="counter-btn increment-btn" data-goal-id="${goal.id}">+</button>
+          </div>
+        `}
+        <span class="drag-handle">≡</span>
       </div>
     `;
 
-    addTouchDragHandlers(card, goal.id, 'goal');
+    addGoalLongPress(card, goal.id);
+    addTouchDragHandlers(card, goal.id, 'goal', card.querySelector('.drag-handle'));
     taskList.appendChild(card);
   });
 
@@ -374,17 +380,17 @@ function renderTasks() {
             <button class="action-btn delete-btn" data-task-id="${task.id}" title="Delete permanently">×</button>
           `}
         </div>
+        ${isDraggable ? '<span class="drag-handle">≡</span>' : ''}
       </div>
     `;
 
-    // Long-press to toggle This Week (only in week/area views, not completed)
     if (!isCompleted) {
       addThisWeekLongPress(card, task);
     }
 
     if (isDraggable) {
       addDragHandlers(card, task.id);
-      addTouchDragHandlers(card, task.id, 'task');
+      addTouchDragHandlers(card, task.id, 'task', card.querySelector('.drag-handle'));
     }
     taskList.appendChild(card);
   });
@@ -630,10 +636,7 @@ function reorderGoal(fromId, toId, insertBefore) {
 
 // ─── Touch drag-and-drop ──────────────────────────────────────────────────────
 
-const TOUCH_DELAY = 300; // ms hold before drag activates
-
-function addTouchDragHandlers(card, itemId, type) {
-  let touchTimer = null;
+function addTouchDragHandlers(card, itemId, type, handle) {
   let isDragging = false;
   let clone = null;
   let lastTarget = null;
@@ -653,12 +656,11 @@ function addTouchDragHandlers(card, itemId, type) {
     });
   }
 
-  card.addEventListener('touchstart', () => {
-    touchTimer = setTimeout(() => {
+  // Drag activates immediately on handle touch — no delay needed
+  if (handle) {
+    handle.addEventListener('touchstart', () => {
       isDragging = true;
       card.classList.add('touch-dragging');
-
-      // Create a visual clone that follows the finger
       clone = card.cloneNode(true);
       clone.style.cssText = `
         position: fixed;
@@ -673,11 +675,10 @@ function addTouchDragHandlers(card, itemId, type) {
         transition: none;
       `;
       document.body.appendChild(clone);
-    }, TOUCH_DELAY);
-  }, { passive: true });
+    }, { passive: true });
+  }
 
   card.addEventListener('touchmove', (e) => {
-    if (touchTimer) { clearTimeout(touchTimer); touchTimer = null; }
     if (!isDragging) return;
     e.preventDefault();
 
@@ -715,7 +716,6 @@ function addTouchDragHandlers(card, itemId, type) {
   }, { passive: false });
 
   function onTouchEnd() {
-    if (touchTimer) { clearTimeout(touchTimer); touchTimer = null; }
     if (!isDragging) return;
 
     if (lastTarget) {
@@ -798,6 +798,50 @@ function saveTask() {
 
   closeTaskModal();
   commit();
+}
+
+// ─── Goal long-press delete popup ────────────────────────────────────────────
+
+function addGoalLongPress(card, goalId) {
+  let holdTimer = null;
+
+  card.addEventListener('touchstart', () => {
+    holdTimer = setTimeout(() => {
+      holdTimer = null;
+      const existing = card.querySelector('.goal-delete-popup');
+      if (existing) existing.remove();
+
+      const popup = document.createElement('div');
+      popup.className = 'goal-delete-popup';
+      popup.innerHTML = `
+        <div class="area-delete-popup-inner">
+          <span class="area-delete-label">Delete goal?</span>
+          <button class="area-delete-confirm">Delete</button>
+          <button class="area-delete-cancel">Cancel</button>
+        </div>
+      `;
+      popup.querySelector('.area-delete-confirm').addEventListener('click', (e) => {
+        e.stopPropagation();
+        popup.remove();
+        deleteGoal(goalId);
+      });
+      popup.querySelector('.area-delete-cancel').addEventListener('click', (e) => {
+        e.stopPropagation();
+        popup.remove();
+      });
+      card.appendChild(popup);
+    }, 600);
+  }, { passive: true });
+
+  card.addEventListener('touchend', () => {
+    if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
+  });
+  card.addEventListener('touchcancel', () => {
+    if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
+  });
+  card.addEventListener('touchmove', () => {
+    if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
+  }, { passive: true });
 }
 
 // ─── This Week long-press popup ──────────────────────────────────────────────
