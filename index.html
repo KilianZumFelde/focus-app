@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#1A1917">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="focus.">
+  <title>focus.</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon.svg">
+</head>
+<body>
+  <div class="app">
+
+    <!-- Sidebar (desktop) -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h1 class="app-name">focus.</h1>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section">
+          <button class="nav-item" id="nav-this-week" data-view="this-week">
+            <span class="nav-icon">◈</span>
+            <span>This Week</span>
+          </button>
+          <button class="nav-item" id="nav-all">
+            <span class="nav-icon">○</span>
+            <span>All Tasks</span>
+          </button>
+        </div>
+
+        <div class="nav-divider"></div>
+
+        <div class="nav-section">
+          <span class="nav-label">Areas</span>
+          <div id="areas-list"></div>
+          <button class="nav-item add-area-btn" id="add-area-btn">
+            <span class="nav-icon">+</span>
+            <span>Add area</span>
+          </button>
+        </div>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button class="nav-item" id="nav-completed">
+          <span class="nav-icon">✓</span>
+          <span>Completed</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <main class="main">
+      <div class="main-header">
+        <div class="header-left">
+          <button class="back-btn hidden" id="back-btn">←</button>
+          <h2 id="view-title">This Week</h2>
+        </div>
+        <div class="header-actions">
+          <button class="btn-secondary" id="add-goal-btn">↻ New goal</button>
+          <button class="btn-primary" id="add-task-btn">+ New task</button>
+        </div>
+      </div>
+
+      <!-- Mobile: completed toggle -->
+      <div class="completed-toggle hidden" id="completed-toggle">
+        <button class="toggle-btn active" id="toggle-open">Open</button>
+        <button class="toggle-btn" id="toggle-done">Completed</button>
+      </div>
+
+      <div id="task-list" class="task-list"></div>
+      <div id="empty-state" class="empty-state hidden">
+        <p>Nothing here yet.</p>
+      </div>
+    </main>
+
+    <!-- Mobile: Areas screen -->
+    <div class="areas-screen hidden" id="areas-screen">
+      <div class="areas-screen-header">
+        <h2>Areas</h2>
+        <button class="all-tasks-link" id="mobile-all-tasks">All Tasks ›</button>
+      </div>
+      <div class="areas-screen-list" id="areas-screen-list"></div>
+    </div>
+
+  </div>
+
+  <!-- Mobile: Bottom nav -->
+  <nav class="bottom-nav" id="bottom-nav">
+    <button class="bottom-nav-item active" id="mobile-nav-this-week">
+      <span class="bottom-nav-icon">◈</span>
+      <span class="bottom-nav-label">This Week</span>
+    </button>
+    <button class="bottom-nav-item bottom-nav-add" id="mobile-nav-add">
+      <span class="bottom-nav-plus">+</span>
+    </button>
+    <button class="bottom-nav-item" id="mobile-nav-areas">
+      <span class="bottom-nav-icon">⊞</span>
+      <span class="bottom-nav-label">Areas</span>
+    </button>
+  </nav>
+
+  <!-- Mobile: + action menu -->
+  <div class="add-action-menu hidden" id="add-action-menu">
+    <button class="add-action-item" id="mobile-add-goal">↻ New goal</button>
+    <button class="add-action-item" id="mobile-add-task">+ New task</button>
+  </div>
+  <div class="add-action-overlay hidden" id="add-action-overlay"></div>
+
+  <!-- Task Modal (Add / Edit) -->
+  <div id="task-modal" class="modal hidden">
+    <div class="modal-overlay" id="task-modal-overlay"></div>
+    <div class="modal-content">
+      <h3 id="modal-title">New task</h3>
+      <div class="form-group">
+        <input type="text" id="task-title-input" placeholder="Task title" autocomplete="off" />
+      </div>
+      <div class="form-group">
+        <textarea id="task-desc-input" placeholder="Description (optional)" rows="3"></textarea>
+      </div>
+      <div class="form-group">
+        <label for="task-area-select">Area</label>
+        <select id="task-area-select"></select>
+      </div>
+      <div class="form-group checkbox-group">
+        <label>
+          <input type="checkbox" id="task-thisweek-check" />
+          Add to This Week
+        </label>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" id="modal-cancel">Cancel</button>
+        <button class="btn-primary" id="modal-save">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Goal Modal (Add / Edit) -->
+  <div id="goal-modal" class="modal hidden">
+    <div class="modal-overlay" id="goal-modal-overlay"></div>
+    <div class="modal-content modal-small">
+      <h3 id="goal-modal-title">New goal</h3>
+      <div class="form-group">
+        <input type="text" id="goal-title-input" placeholder="Goal title" autocomplete="off" />
+      </div>
+      <div class="form-group">
+        <label for="goal-area-select">Area</label>
+        <select id="goal-area-select"></select>
+      </div>
+      <div class="form-group">
+        <label for="goal-target-input">Weekly target</label>
+        <input type="number" id="goal-target-input" min="1" value="1" />
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" id="goal-modal-cancel">Cancel</button>
+        <button class="btn-primary" id="goal-modal-save">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Area Modal (Add) -->
+  <div id="area-modal" class="modal hidden">
+    <div class="modal-overlay" id="area-modal-overlay"></div>
+    <div class="modal-content modal-small">
+      <h3>New area</h3>
+      <div class="form-group">
+        <input type="text" id="area-name-input" placeholder="Area name" autocomplete="off" />
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" id="area-modal-cancel">Cancel</button>
+        <button class="btn-primary" id="area-modal-save">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
