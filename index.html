@@ -117,10 +117,10 @@
     <div class="modal-content">
       <h3 id="modal-title">New task</h3>
       <div class="form-group">
-        <input type="text" id="task-title-input" placeholder="Task title" autocomplete="off" />
+        <input type="text" id="task-title-input" placeholder="Task title" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
       </div>
       <div class="form-group">
-        <textarea id="task-desc-input" placeholder="Description (optional)" rows="3" autocomplete="off"></textarea>
+        <textarea id="task-desc-input" placeholder="Description (optional)" rows="3" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
       </div>
       <div class="form-group">
         <label for="task-area-select">Area</label>
@@ -145,7 +145,7 @@
     <div class="modal-content modal-small">
       <h3 id="goal-modal-title">New goal</h3>
       <div class="form-group">
-        <input type="text" id="goal-title-input" placeholder="Goal title" autocomplete="off" />
+        <input type="text" id="goal-title-input" placeholder="Goal title" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
       </div>
       <div class="form-group">
         <label for="goal-area-select">Area</label>
@@ -153,7 +153,7 @@
       </div>
       <div class="form-group">
         <label for="goal-target-input">Weekly target</label>
-        <input type="number" id="goal-target-input" min="1" value="1" autocomplete="off" />
+        <input type="text" inputmode="numeric" id="goal-target-input" min="1" value="1" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
       </div>
       <div class="modal-actions">
         <button class="btn-secondary" id="goal-modal-cancel">Cancel</button>
@@ -168,7 +168,7 @@
     <div class="modal-content modal-small">
       <h3>New area</h3>
       <div class="form-group">
-        <input type="text" id="area-name-input" placeholder="Area name" autocomplete="off" />
+        <input type="text" id="area-name-input" placeholder="Area name" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
       </div>
       <div class="modal-actions">
         <button class="btn-secondary" id="area-modal-cancel">Cancel</button>
