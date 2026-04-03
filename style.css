@@ -541,6 +541,7 @@ input[type="number"]:focus {
   cursor: grab;
   padding: 0 4px;
   flex-shrink: 0;
+  align-self: center;
   user-select: none;
   touch-action: none;
 }

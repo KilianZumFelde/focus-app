@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "WebSearch"
+      "WebSearch",
+      "Bash(curl -s \"https://kilianzumfelde.github.io/focus-app/style.css\")"
     ]
   }
 }
