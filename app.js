@@ -218,31 +218,17 @@ function renderGoals(taskList) {
           </div>
           <div class="task-meta">${buildAreaTag(area)}</div>
         </div>
-        ${isDone ? `
-          <span class="counter-display">✓ ${goal.count} / ${goal.target}</span>
-        ` : `
-          <div class="goal-counter">
-            <button class="counter-btn decrement-btn" data-goal-id="${goal.id}" ${goal.count <= 0 ? 'disabled' : ''}>−</button>
-            <span class="counter-display">${goal.count} / ${goal.target}</span>
-            <button class="counter-btn increment-btn" data-goal-id="${goal.id}">+</button>
-          </div>
-        `}
-        <span class="drag-handle">≡</span>
+        <span class="counter-display${isDone ? ' counter-done' : ''}">${isDone ? '✓ ' : ''}${goal.count} / ${goal.target}</span>
+        <div class="drag-handle"></div>
       </div>
     `;
 
     addGoalLongPress(card, goal.id);
+    if (!isDone) addGoalTapPopup(card, goal);
     addTouchDragHandlers(card, goal.id, 'goal', card.querySelector('.drag-handle'));
     taskList.appendChild(card);
   });
 
-  // Counter listeners
-  taskList.querySelectorAll('.increment-btn').forEach(btn => {
-    btn.addEventListener('click', () => incrementGoal(btn.dataset.goalId));
-  });
-  taskList.querySelectorAll('.decrement-btn').forEach(btn => {
-    btn.addEventListener('click', () => decrementGoal(btn.dataset.goalId));
-  });
   return true;
 }
 
@@ -365,7 +351,7 @@ function renderTasks() {
     card.style.borderLeftColor = borderColor;
     card.dataset.taskId = task.id;
 
-    const isCompleted = state.currentView === 'completed';
+    const isCompleted = state.currentView === 'completed' || mobileShowCompleted;
 
     card.innerHTML = `
       <div class="task-card-main">
@@ -373,31 +359,27 @@ function renderTasks() {
           <div class="task-title">${escapeHtml(task.title)}</div>
           <div class="task-meta">${buildAreaTag(area)}</div>
         </div>
-        <div class="task-card-actions">
-          ${!isCompleted ? `
-            <button class="action-btn complete-btn" data-task-id="${task.id}" title="Mark as done">✓</button>
-          ` : `
+        ${isCompleted ? `
+          <div class="task-card-actions">
             <button class="action-btn delete-btn" data-task-id="${task.id}" title="Delete permanently">×</button>
-          `}
-        </div>
-        ${isDraggable ? '<span class="drag-handle">≡</span>' : ''}
+          </div>
+        ` : isDraggable ? '<div class="drag-handle"></div>' : ''}
       </div>
     `;
 
     if (!isCompleted) {
+      card.classList.add('task-tappable');
       addThisWeekLongPress(card, task);
+      addTaskTapPopup(card, task);
     }
 
-    if (isDraggable) {
+    if (isDraggable && !isCompleted) {
       if (!isMobile()) addDragHandlers(card, task.id);
       addTouchDragHandlers(card, task.id, 'task', card.querySelector('.drag-handle'));
     }
     taskList.appendChild(card);
   });
 
-  taskList.querySelectorAll('.complete-btn').forEach(btn => {
-    btn.addEventListener('click', () => completeTask(btn.dataset.taskId));
-  });
   taskList.querySelectorAll('.delete-btn').forEach(btn => {
     btn.addEventListener('click', () => deleteTask(btn.dataset.taskId));
   });
@@ -807,8 +789,10 @@ function addGoalLongPress(card, goalId) {
 
   card.addEventListener('touchstart', (e) => {
     if (e.target.closest('.drag-handle')) return;
+    card._longPressActive = false;
     holdTimer = setTimeout(() => {
       holdTimer = null;
+      card._longPressActive = true;
       const existing = card.querySelector('.goal-delete-popup');
       if (existing) existing.remove();
 
@@ -852,8 +836,10 @@ function addThisWeekLongPress(card, task) {
 
   card.addEventListener('touchstart', (e) => {
     if (e.target.closest('.drag-handle')) return;
+    card._longPressActive = false;
     holdTimer = setTimeout(() => {
       holdTimer = null;
+      card._longPressActive = true;
       showThisWeekPopup(card, task);
     }, 600);
   }, { passive: true });
@@ -894,6 +880,98 @@ function showThisWeekPopup(card, task) {
   popup.querySelector('.area-delete-cancel').addEventListener('click', (e) => {
     e.stopPropagation();
     popup.remove();
+  });
+
+  card.appendChild(popup);
+}
+
+// ─── Task tap popup (complete) ────────────────────────────────────────────────
+
+function addTaskTapPopup(card, task) {
+  card.addEventListener('click', (e) => {
+    if (e.target.closest('.drag-handle')) return;
+    if (e.target.closest('.task-complete-popup')) return;
+    if (e.target.closest('.thisweek-popup')) return;
+    if (card._longPressActive) { card._longPressActive = false; return; }
+    if (card.querySelector('.task-complete-popup')) return;
+    showTaskCompletePopup(card, task);
+  });
+}
+
+function showTaskCompletePopup(card, task) {
+  const popup = document.createElement('div');
+  popup.className = 'task-complete-popup';
+  popup.innerHTML = `
+    <div class="area-delete-popup-inner">
+      <span class="area-delete-label">Complete task?</span>
+      <button class="area-delete-confirm">Complete</button>
+      <button class="area-delete-cancel">Cancel</button>
+    </div>
+  `;
+  popup.querySelector('.area-delete-confirm').addEventListener('click', (e) => {
+    e.stopPropagation();
+    popup.remove();
+    completeTask(task.id);
+  });
+  popup.querySelector('.area-delete-cancel').addEventListener('click', (e) => {
+    e.stopPropagation();
+    popup.remove();
+  });
+  card.appendChild(popup);
+}
+
+// ─── Goal tap popup (counter) ─────────────────────────────────────────────────
+
+function addGoalTapPopup(card, goal) {
+  card.addEventListener('click', (e) => {
+    if (e.target.closest('.drag-handle')) return;
+    if (e.target.closest('.goal-delete-popup')) return;
+    if (e.target.closest('.goal-counter-popup')) return;
+    if (card._longPressActive) { card._longPressActive = false; return; }
+    if (card.querySelector('.goal-counter-popup')) return;
+    showGoalCounterPopup(card, goal);
+  });
+}
+
+function showGoalCounterPopup(card, goal) {
+  const popup = document.createElement('div');
+  popup.className = 'goal-counter-popup';
+
+  function getGoal() { return state.goals.find(g => g.id === goal.id); }
+
+  function updateDisplay() {
+    const g = getGoal();
+    if (!g) return;
+    popup.querySelector('.popup-count').textContent = `${g.count} / ${g.target}`;
+    popup.querySelector('.popup-decrement').disabled = g.count <= 0;
+    popup.querySelector('.popup-increment').disabled = g.count >= g.target;
+  }
+
+  const g = getGoal();
+  if (!g) return;
+  popup.innerHTML = `
+    <div class="area-delete-popup-inner">
+      <button class="counter-btn popup-decrement" ${g.count <= 0 ? 'disabled' : ''}>−</button>
+      <span class="popup-count counter-display">${g.count} / ${g.target}</span>
+      <button class="counter-btn popup-increment" ${g.count >= g.target ? 'disabled' : ''}>+</button>
+      <button class="area-delete-cancel" style="margin-left:auto;">Done</button>
+    </div>
+  `;
+
+  popup.querySelector('.popup-decrement').addEventListener('click', (e) => {
+    e.stopPropagation();
+    const g = getGoal();
+    if (g && g.count > 0) { g.count--; saveState(); updateDisplay(); }
+  });
+  popup.querySelector('.popup-increment').addEventListener('click', (e) => {
+    e.stopPropagation();
+    const g = getGoal();
+    if (g && g.count < g.target) { g.count++; saveState(); updateDisplay(); }
+  });
+  popup.querySelector('.area-delete-cancel').addEventListener('click', (e) => {
+    e.stopPropagation();
+    popup.remove();
+    render();
   });
 
   card.appendChild(popup);

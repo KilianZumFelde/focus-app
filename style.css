@@ -557,14 +557,87 @@ input[type="number"]:focus {
 
 /* ─── Drag handle ───────────────────────────────────────────────────────────── */
 .drag-handle {
-  font-size: 16px;
-  color: var(--text-muted);
-  cursor: grab;
-  padding: 0 4px;
+  width: 44px;
+  align-self: stretch;
   flex-shrink: 0;
-  align-self: center;
+  cursor: grab;
   user-select: none;
   touch-action: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.drag-handle::after {
+  content: '⋮';
+  font-size: 14px;
+  color: var(--text-muted);
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.task-card:hover .drag-handle::after,
+.goal-card:hover .drag-handle::after {
+  opacity: 1;
+}
+
+/* ─── Card tap cursor ───────────────────────────────────────────────────────── */
+.task-tappable {
+  cursor: pointer;
+}
+
+.goal-card:not(.goal-done) {
+  cursor: pointer;
+}
+
+/* ─── Inline card popups ────────────────────────────────────────────────────── */
+.goal-delete-popup,
+.thisweek-popup,
+.area-delete-popup,
+.task-complete-popup,
+.goal-counter-popup {
+  position: absolute;
+  inset: 0;
+  background: var(--surface);
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  z-index: 5;
+}
+
+.area-delete-popup-inner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.area-delete-label {
+  font-size: 13px;
+  color: var(--text-secondary);
+  flex: 1;
+}
+
+.area-delete-confirm {
+  background: none;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  color: #e05a5a;
+  cursor: pointer;
+  font-family: inherit;
+  padding: 4px 8px;
+}
+
+.area-delete-cancel {
+  background: none;
+  border: none;
+  font-size: 13px;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-family: inherit;
+  padding: 4px 8px;
 }
 
 /* ─── Touch drag ────────────────────────────────────────────────────────────── */
@@ -859,55 +932,6 @@ input[type="number"]:focus {
   .area-screen-card-add .area-screen-card-name {
     color: var(--text-secondary);
   }
-
-  /* Long-press popups (area delete + this week toggle + goal delete) */
-  .goal-delete-popup,
-  .thisweek-popup,
-  .area-delete-popup {
-    position: absolute;
-    inset: 0;
-    background: var(--surface);
-    border-radius: var(--radius);
-    display: flex;
-    align-items: center;
-    padding: 0 16px;
-    z-index: 5;
-  }
-
-  .area-delete-popup-inner {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    width: 100%;
-  }
-
-  .area-delete-label {
-    font-size: 13px;
-    color: var(--text-secondary);
-    flex: 1;
-  }
-
-  .area-delete-confirm {
-    background: none;
-    border: none;
-    font-size: 13px;
-    font-weight: 600;
-    color: #e05a5a;
-    cursor: pointer;
-    font-family: inherit;
-    padding: 4px 8px;
-  }
-
-  .area-delete-cancel {
-    background: none;
-    border: none;
-    font-size: 13px;
-    color: var(--text-muted);
-    cursor: pointer;
-    font-family: inherit;
-    padding: 4px 8px;
-  }
-
 
   /* ─── Bottom nav ─────────────────────────────────────── */
   .bottom-nav {
