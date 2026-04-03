@@ -824,11 +824,15 @@ function showAreaDeletePopup(areaId, areaName, anchorCard) {
     </div>
   `;
 
-  popup.querySelector('.area-delete-confirm').addEventListener('click', () => {
+  popup.querySelector('.area-delete-confirm').addEventListener('click', (e) => {
+    e.stopPropagation();
     popup.remove();
     deleteArea(areaId);
   });
-  popup.querySelector('.area-delete-cancel').addEventListener('click', () => popup.remove());
+  popup.querySelector('.area-delete-cancel').addEventListener('click', (e) => {
+    e.stopPropagation();
+    popup.remove();
+  });
 
   anchorCard.appendChild(popup);
 }

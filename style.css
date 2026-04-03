@@ -816,14 +816,13 @@ input[type="number"]:focus {
     border-left-color: transparent;
     box-shadow: none;
     border: 1px dashed var(--border);
+    display: flex;
     justify-content: center;
+    align-items: center;
   }
 
   .area-screen-card-add .area-screen-card-name {
     color: var(--text-secondary);
-    display: block;
-    width: 100%;
-    text-align: center;
   }
 
   /* Long-press delete popup */
