@@ -369,11 +369,6 @@ function renderTasks() {
         </div>
         <div class="task-card-actions">
           ${!isCompleted ? `
-            <button class="action-btn thisweek-btn ${task.thisWeek ? 'active' : ''}"
-              data-task-id="${task.id}"
-              title="${task.thisWeek ? 'Remove from This Week' : 'Add to This Week'}">
-              −
-            </button>
             <button class="action-btn complete-btn" data-task-id="${task.id}" title="Mark as done">✓</button>
           ` : `
             <button class="action-btn delete-btn" data-task-id="${task.id}" title="Delete permanently">×</button>
@@ -382,6 +377,11 @@ function renderTasks() {
       </div>
     `;
 
+    // Long-press to toggle This Week (only in week/area views, not completed)
+    if (!isCompleted) {
+      addThisWeekLongPress(card, task);
+    }
+
     if (isDraggable) {
       addDragHandlers(card, task.id);
       addTouchDragHandlers(card, task.id, 'task');
@@ -389,10 +389,6 @@ function renderTasks() {
     taskList.appendChild(card);
   });
 
-  // Attach task action listeners
-  taskList.querySelectorAll('.thisweek-btn').forEach(btn => {
-    btn.addEventListener('click', () => toggleThisWeek(btn.dataset.taskId));
-  });
   taskList.querySelectorAll('.complete-btn').forEach(btn => {
     btn.addEventListener('click', () => completeTask(btn.dataset.taskId));
   });
@@ -802,6 +798,59 @@ function saveTask() {
 
   closeTaskModal();
   commit();
+}
+
+// ─── This Week long-press popup ──────────────────────────────────────────────
+
+function addThisWeekLongPress(card, task) {
+  let holdTimer = null;
+
+  card.addEventListener('touchstart', () => {
+    holdTimer = setTimeout(() => {
+      holdTimer = null;
+      showThisWeekPopup(card, task);
+    }, 600);
+  }, { passive: true });
+
+  card.addEventListener('touchend', () => {
+    if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
+  });
+  card.addEventListener('touchcancel', () => {
+    if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
+  });
+  card.addEventListener('touchmove', () => {
+    if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
+  }, { passive: true });
+}
+
+function showThisWeekPopup(card, task) {
+  const existing = card.querySelector('.thisweek-popup');
+  if (existing) existing.remove();
+
+  const label = task.thisWeek ? 'Remove from This Week?' : 'Add to This Week?';
+  const actionLabel = task.thisWeek ? 'Remove' : 'Add';
+
+  const popup = document.createElement('div');
+  popup.className = 'thisweek-popup';
+  popup.innerHTML = `
+    <div class="area-delete-popup-inner">
+      <span class="area-delete-label">${label}</span>
+      <button class="area-delete-confirm">${actionLabel}</button>
+      <button class="area-delete-cancel">Cancel</button>
+    </div>
+  `;
+
+  popup.querySelector('.area-delete-confirm').addEventListener('click', (e) => {
+    e.stopPropagation();
+    popup.remove();
+    toggleThisWeek(task.id);
+  });
+  popup.querySelector('.area-delete-cancel').addEventListener('click', (e) => {
+    e.stopPropagation();
+    popup.remove();
+  });
+
+  card.appendChild(popup);
 }
 
 // ─── Area delete popup ────────────────────────────────────────────────────────

@@ -213,6 +213,7 @@ body {
 
 /* ─── Task card ─────────────────────────────────────── */
 .task-card {
+  position: relative;
   background: var(--surface);
   border-radius: var(--radius);
   border-left: 4px solid #ddd;
@@ -825,7 +826,8 @@ input[type="number"]:focus {
     color: var(--text-secondary);
   }
 
-  /* Long-press delete popup */
+  /* Long-press popups (area delete + this week toggle) */
+  .thisweek-popup,
   .area-delete-popup {
     position: absolute;
     inset: 0;
