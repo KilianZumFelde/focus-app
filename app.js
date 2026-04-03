@@ -230,6 +230,7 @@ function renderGoals(taskList) {
       </div>
     `;
 
+    addTouchDragHandlers(card, goal.id, 'goal');
     taskList.appendChild(card);
   });
 
@@ -358,7 +359,10 @@ function renderTasks() {
       </div>
     `;
 
-    if (isDraggable) addDragHandlers(card, task.id);
+    if (isDraggable) {
+      addDragHandlers(card, task.id);
+      addTouchDragHandlers(card, task.id, 'task');
+    }
     taskList.appendChild(card);
   });
 
@@ -585,6 +589,123 @@ function reorderTask(fromId, toId, insertBefore) {
   if (toIdx === -1) { state.tasks.push(moved); return; }
   state.tasks.splice(insertBefore ? toIdx : toIdx + 1, 0, moved);
   commit();
+}
+
+function reorderGoal(fromId, toId, insertBefore) {
+  const fromIdx = state.goals.findIndex(g => g.id === fromId);
+  if (fromIdx === -1) return;
+  const [moved] = state.goals.splice(fromIdx, 1);
+  const toIdx = state.goals.findIndex(g => g.id === toId);
+  if (toIdx === -1) { state.goals.push(moved); return; }
+  state.goals.splice(insertBefore ? toIdx : toIdx + 1, 0, moved);
+  commit();
+}
+
+// ─── Touch drag-and-drop ──────────────────────────────────────────────────────
+
+const TOUCH_DELAY = 300; // ms hold before drag activates
+
+function addTouchDragHandlers(card, itemId, type) {
+  let touchTimer = null;
+  let isDragging = false;
+  let clone = null;
+  let lastTarget = null;
+
+  function getCards() {
+    return type === 'task'
+      ? [...document.querySelectorAll('.task-card[data-task-id]')]
+      : [...document.querySelectorAll('.goal-card[data-goal-id]')];
+  }
+
+  function cleanup() {
+    isDragging = false;
+    if (clone) { clone.remove(); clone = null; }
+    card.classList.remove('touch-dragging');
+    document.querySelectorAll('.drag-over-top, .drag-over-bottom').forEach(el => {
+      el.classList.remove('drag-over-top', 'drag-over-bottom');
+    });
+  }
+
+  card.addEventListener('touchstart', () => {
+    touchTimer = setTimeout(() => {
+      isDragging = true;
+      card.classList.add('touch-dragging');
+
+      // Create a visual clone that follows the finger
+      clone = card.cloneNode(true);
+      clone.style.cssText = `
+        position: fixed;
+        left: ${card.getBoundingClientRect().left}px;
+        top: ${card.getBoundingClientRect().top}px;
+        width: ${card.offsetWidth}px;
+        opacity: 0.85;
+        pointer-events: none;
+        z-index: 1000;
+        transform: scale(1.02);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+        transition: none;
+      `;
+      document.body.appendChild(clone);
+    }, TOUCH_DELAY);
+  }, { passive: true });
+
+  card.addEventListener('touchmove', (e) => {
+    if (touchTimer) { clearTimeout(touchTimer); touchTimer = null; }
+    if (!isDragging) return;
+    e.preventDefault();
+
+    const touch = e.touches[0];
+
+    // Move clone with finger
+    if (clone) {
+      clone.style.left = (touch.clientX - card.offsetWidth / 2) + 'px';
+      clone.style.top  = (touch.clientY - card.offsetHeight / 2) + 'px';
+    }
+
+    // Find card under finger
+    clone.style.display = 'none';
+    const el = document.elementFromPoint(touch.clientX, touch.clientY);
+    clone.style.display = '';
+
+    const targetCard = el && el.closest(type === 'task' ? '.task-card' : '.goal-card');
+    const targetId   = targetCard && (type === 'task'
+      ? targetCard.dataset.taskId
+      : targetCard.dataset.goalId);
+
+    if (targetCard && targetId && targetId !== itemId) {
+      lastTarget = { id: targetId, card: targetCard };
+      const rect = targetCard.getBoundingClientRect();
+      const inTopHalf = touch.clientY < rect.top + rect.height / 2;
+      getCards().forEach(c => {
+        if (c !== targetCard) c.classList.remove('drag-over-top', 'drag-over-bottom');
+      });
+      targetCard.classList.toggle('drag-over-top', inTopHalf);
+      targetCard.classList.toggle('drag-over-bottom', !inTopHalf);
+    } else if (!targetCard) {
+      getCards().forEach(c => c.classList.remove('drag-over-top', 'drag-over-bottom'));
+      lastTarget = null;
+    }
+  }, { passive: false });
+
+  function onTouchEnd() {
+    if (touchTimer) { clearTimeout(touchTimer); touchTimer = null; }
+    if (!isDragging) return;
+
+    if (lastTarget) {
+      const insertBefore = lastTarget.card.classList.contains('drag-over-top');
+      if (type === 'task') {
+        reorderTask(itemId, lastTarget.id, insertBefore);
+      } else {
+        reorderGoal(itemId, lastTarget.id, insertBefore);
+      }
+    }
+
+    cleanup();
+    lastTarget = null;
+  }
+
+  card.addEventListener('touchend',    onTouchEnd);
+  card.addEventListener('touchcancel', cleanup);
 }
 
 // ─── Task modal ───────────────────────────────────────────────────────────────

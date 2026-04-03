@@ -37,7 +37,9 @@ For mobile: host over HTTPS and install as PWA via browser "Add to Home Screen".
 
 ## Decisions made
 - No due dates or subtasks (out of scope for v1)
-- Drag-and-drop reordering is supported in This Week and area views
+- Drag-and-drop reordering is supported in This Week and area views (mouse on desktop, touch on mobile)
+- Touch drag uses a 300ms hold delay to distinguish from scrolling; works for both tasks and goals
+- Goals can be reordered across the full goal list (not scoped to area)
 - Deleting an area with tasks shows a confirmation warning
 - Completed tasks are fully separate from active tasks
 - Task completion uses a two-step animation: green flash → collapse/fade (~300ms each), then state updates

@@ -519,6 +519,13 @@ input[type="number"]:focus {
   border-color: var(--text-primary);
 }
 
+/* ─── Touch drag ────────────────────────────────────────────────────────────── */
+.task-card.touch-dragging,
+.goal-card.touch-dragging {
+  opacity: 0.4;
+  transform: scale(0.98);
+}
+
 /* ─── Task completion animation ─────────────────────────────────────────────── */
 .task-card.completing-flash {
   background: #edf7f1;

@@ -33,7 +33,9 @@ Each task has:
 - **"This week"** flag — mark it to include it in the This Week view
 
 ### Reordering
-Tasks can be reordered by dragging within the **This Week** and **area** views. Order is saved automatically.
+Tasks and goals can be reordered by dragging within the **This Week** and **area** views. Order is saved automatically.
+- Desktop: standard mouse drag
+- Mobile: hold finger for 300ms to activate, then drag. The delay prevents accidental drags while scrolling.
 
 ### Color coding
 - Each area has a unique soft color
