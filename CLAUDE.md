@@ -44,6 +44,7 @@ For mobile: host over HTTPS and install as PWA via browser "Add to Home Screen".
 - Completed tasks are fully separate from active tasks
 - Task completion uses a two-step animation: green flash → collapse/fade (~300ms each), then state updates
 - Mobile layout activates at ≤768px via CSS media query — desktop layout is untouched
+- Modals on mobile use `visualViewport` resize listener to stay above the Android keyboard; `autocomplete="off"` on all inputs suppresses the autofill bar
 - Mobile nav: bottom bar (This Week | + | Areas), Areas screen is a full-screen list
 - The + button opens a mini action menu (New task / New goal) anchored above it
 - Completed toggle (Open / Completed) appears in All Tasks and area views on mobile

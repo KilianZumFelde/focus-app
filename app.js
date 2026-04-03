@@ -1009,4 +1009,23 @@ document.addEventListener('DOMContentLoaded', () => {
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./service-worker.js').catch(() => {});
   }
+
+  // Mobile: keep modals above keyboard when it opens
+  if (window.visualViewport && isMobile()) {
+    window.visualViewport.addEventListener('resize', () => {
+      const windowHeight = window.innerHeight;
+      const viewportHeight = window.visualViewport.height;
+      const keyboardHeight = windowHeight - viewportHeight;
+      const modalContents = document.querySelectorAll('.modal-content');
+      modalContents.forEach(el => {
+        if (keyboardHeight > 100) {
+          el.style.setProperty('--keyboard-offset', keyboardHeight + 'px');
+          el.classList.add('keyboard-open');
+        } else {
+          el.classList.remove('keyboard-open');
+          el.style.removeProperty('--keyboard-offset');
+        }
+      });
+    });
+  }
 });
