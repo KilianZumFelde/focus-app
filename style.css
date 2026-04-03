@@ -792,20 +792,23 @@ input[type="number"]:focus {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 16px 20px;
+    padding: 20px 20px;
     background: none;
     border: none;
     border-bottom: 1px solid var(--border);
     width: 100%;
     text-align: left;
     cursor: pointer;
-    font-size: 15px;
+    font-size: 16px;
     color: var(--text-primary);
     font-family: inherit;
-    transition: background 0.12s;
+    transition: background 0.15s, transform 0.1s;
   }
 
-  .area-screen-row:active { background: var(--sidebar-bg); }
+  .area-screen-row:active {
+    background: var(--sidebar-bg);
+    transform: scale(0.98);
+  }
 
   .area-screen-row.muted {
     font-size: 13px;
@@ -903,7 +906,6 @@ input[type="number"]:focus {
     align-items: center;
     justify-content: center;
     padding: 0;
-    margin-bottom: 8px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.2);
     transition: opacity 0.12s, transform 0.12s;
   }

@@ -816,6 +816,11 @@ function saveArea() {
 
   closeAreaModal();
   commit();
+
+  // On mobile, refresh the areas screen immediately if it's open
+  if (isMobile() && !document.getElementById('areas-screen').classList.contains('hidden')) {
+    renderAreasScreen();
+  }
 }
 
 // ─── Mobile navigation ────────────────────────────────────────────────────────
