@@ -305,7 +305,7 @@ function renderTasks() {
       const link = document.createElement('button');
       link.id = 'completed-link';
       link.className = 'completed-header-link';
-      link.textContent = 'Completed';
+      link.textContent = 'Completed ›';
       link.addEventListener('click', () => {
         mobileShowCompleted = true;
         render();
@@ -319,6 +319,20 @@ function renderTasks() {
   }
 
   viewTitle.textContent = title;
+
+  // Show "Clear all" button in header when viewing completed tasks
+  const existingClear = document.getElementById('clear-completed-btn');
+  if (existingClear) existingClear.remove();
+  const isShowingCompleted = state.currentView === 'completed' || mobileShowCompleted;
+  if (isShowingCompleted) {
+    const clearBtn = document.createElement('button');
+    clearBtn.id = 'clear-completed-btn';
+    clearBtn.className = 'clear-completed-btn';
+    clearBtn.textContent = 'Clear all';
+    clearBtn.addEventListener('click', clearCompleted);
+    document.querySelector('.header-actions').appendChild(clearBtn);
+  }
+
   taskList.innerHTML = '';
 
   const goalsRendered = renderGoals(taskList);
@@ -433,6 +447,14 @@ function toggleThisWeek(id) {
 
 function deleteTask(id) {
   state.tasks = state.tasks.filter(t => t.id !== id);
+  commit();
+}
+
+function clearCompleted() {
+  const count = state.tasks.filter(t => t.done).length;
+  if (count === 0) return;
+  if (!confirm(`Delete all ${count} completed task${count > 1 ? 's' : ''}?`)) return;
+  state.tasks = state.tasks.filter(t => !t.done);
   commit();
 }
 
@@ -779,6 +801,38 @@ function saveTask() {
   commit();
 }
 
+// ─── Area delete popup ────────────────────────────────────────────────────────
+
+function showAreaDeletePopup(areaId, areaName, anchorCard) {
+  // Remove any existing popup
+  const existing = document.getElementById('area-delete-popup');
+  if (existing) existing.remove();
+
+  const taskCount = state.tasks.filter(t => t.areaId === areaId).length;
+
+  const popup = document.createElement('div');
+  popup.id = 'area-delete-popup';
+  popup.className = 'area-delete-popup';
+  popup.innerHTML = `
+    <div class="area-delete-popup-inner">
+      <span class="area-delete-label">${taskCount > 0
+        ? `Delete "${escapeHtml(areaName)}"? (${taskCount} task${taskCount > 1 ? 's' : ''} will be deleted)`
+        : `Delete "${escapeHtml(areaName)}"?`
+      }</span>
+      <button class="area-delete-confirm">Delete</button>
+      <button class="area-delete-cancel">Cancel</button>
+    </div>
+  `;
+
+  popup.querySelector('.area-delete-confirm').addEventListener('click', () => {
+    popup.remove();
+    deleteArea(areaId);
+  });
+  popup.querySelector('.area-delete-cancel').addEventListener('click', () => popup.remove());
+
+  anchorCard.appendChild(popup);
+}
+
 // ─── Area modal ───────────────────────────────────────────────────────────────
 
 function openAddArea() {
@@ -836,17 +890,38 @@ function renderAreasScreen() {
     card.className = 'area-screen-card';
     card.style.borderLeftColor = area.color;
     card.innerHTML = `<span class="area-screen-card-name">${escapeHtml(area.name)}</span>`;
+
+    // Quick tap animation then navigate
     card.addEventListener('click', () => {
-      hideAreasScreen();
-      setMobileView(area.id);
+      card.classList.add('area-card-tapped');
+      setTimeout(() => {
+        hideAreasScreen();
+        setMobileView(area.id);
+      }, 80);
     });
+
+    // Long-press to delete (600ms hold)
+    let holdTimer = null;
+    card.addEventListener('touchstart', () => {
+      holdTimer = setTimeout(() => {
+        holdTimer = null;
+        showAreaDeletePopup(area.id, area.name, card);
+      }, 600);
+    }, { passive: true });
+    card.addEventListener('touchend', () => {
+      if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
+    });
+    card.addEventListener('touchcancel', () => {
+      if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
+    });
+
     list.appendChild(card);
   });
 
-  // Add area
-  const addBtn = document.createElement('button');
-  addBtn.className = 'area-screen-add';
-  addBtn.innerHTML = `<span>+ Add area</span>`;
+  // Add area — card style, extra spacing
+  const addBtn = document.createElement('div');
+  addBtn.className = 'area-screen-card area-screen-card-add';
+  addBtn.innerHTML = `<span class="area-screen-card-name">+ Add area</span>`;
   addBtn.addEventListener('click', openAddArea);
   list.appendChild(addBtn);
 

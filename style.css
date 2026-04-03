@@ -355,6 +355,19 @@ body {
   font-family: inherit;
 }
 
+.clear-completed-btn {
+  background: none;
+  border: none;
+  font-size: 13px;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-family: inherit;
+  padding: 0;
+  transition: color 0.12s;
+}
+
+.clear-completed-btn:hover { color: #e05a5a; }
+
 .btn-secondary:hover {
   background: var(--bg);
   color: var(--text-primary);
@@ -702,6 +715,10 @@ input[type="number"]:focus {
     font-size: 22px;
   }
 
+  .main-header .header-left {
+    flex: 1;
+  }
+
   .task-list {
     padding: 0 20px 32px;
   }
@@ -722,6 +739,7 @@ input[type="number"]:focus {
     font-family: inherit;
     padding: 0;
     margin-left: auto;
+    flex-shrink: 0;
   }
 
   .completed-header-link:active { color: var(--text-secondary); }
@@ -771,6 +789,7 @@ input[type="number"]:focus {
   }
 
   .area-screen-card {
+    position: relative;
     background: var(--surface);
     border-radius: var(--radius);
     border-left: 4px solid #ddd;
@@ -781,9 +800,10 @@ input[type="number"]:focus {
     transition: box-shadow 0.15s, transform 0.1s;
   }
 
-  .area-screen-card:active {
-    transform: scale(0.98);
-    box-shadow: 0 3px 10px rgba(0,0,0,0.09);
+  .area-screen-card:active,
+  .area-screen-card.area-card-tapped {
+    transform: scale(0.97);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
   }
 
   .area-screen-card-name {
@@ -792,24 +812,63 @@ input[type="number"]:focus {
     color: var(--text-primary);
   }
 
-  .area-screen-add {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 14px 20px;
-    background: none;
-    border: none;
-    border-top: 1px solid var(--border);
-    width: 100%;
-    text-align: left;
-    cursor: pointer;
-    font-size: 14px;
-    color: var(--text-muted);
-    font-family: inherit;
-    transition: background 0.12s;
+  .area-screen-card-add {
+    border-left-color: transparent;
+    margin-top: 28px;
+    box-shadow: none;
+    border: 1px dashed var(--border);
   }
 
-  .area-screen-add:active { background: var(--sidebar-bg); }
+  .area-screen-card-add .area-screen-card-name {
+    color: var(--text-secondary);
+  }
+
+  /* Long-press delete popup */
+  .area-delete-popup {
+    position: absolute;
+    inset: 0;
+    background: var(--surface);
+    border-radius: var(--radius);
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    z-index: 5;
+  }
+
+  .area-delete-popup-inner {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .area-delete-label {
+    font-size: 13px;
+    color: var(--text-secondary);
+    flex: 1;
+  }
+
+  .area-delete-confirm {
+    background: none;
+    border: none;
+    font-size: 13px;
+    font-weight: 600;
+    color: #e05a5a;
+    cursor: pointer;
+    font-family: inherit;
+    padding: 4px 8px;
+  }
+
+  .area-delete-cancel {
+    background: none;
+    border: none;
+    font-size: 13px;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-family: inherit;
+    padding: 4px 8px;
+  }
+
 
   /* ─── Bottom nav ─────────────────────────────────────── */
   .bottom-nav {
