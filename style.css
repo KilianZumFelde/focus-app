@@ -892,11 +892,13 @@ input[type="number"]:focus {
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
     gap: 3px;
     background: none;
     border: none;
     cursor: pointer;
     padding: 8px 20px;
+    flex: 1;
     color: var(--text-muted);
     transition: color 0.12s;
     font-family: inherit;
@@ -914,6 +916,17 @@ input[type="number"]:focus {
 
   /* + button */
   .bottom-nav-add {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+  }
+
+  .bottom-nav-plus-circle {
     width: 52px;
     height: 52px;
     background: var(--text-primary);
@@ -921,12 +934,11 @@ input[type="number"]:focus {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 0;
     box-shadow: 0 4px 12px rgba(0,0,0,0.2);
     transition: opacity 0.12s, transform 0.12s;
   }
 
-  .bottom-nav-add:active {
+  .bottom-nav-add:active .bottom-nav-plus-circle {
     opacity: 0.8;
     transform: scale(0.95);
   }
@@ -997,11 +1009,7 @@ input[type="number"]:focus {
     transition: bottom 0.15s ease;
   }
 
-  .modal-content.keyboard-open {
-    bottom: var(--keyboard-offset, 0px);
-  }
-
-  /* ─── Touch-friendly cards ───────────────────────────── */
+/* ─── Touch-friendly cards ───────────────────────────── */
   .task-card,
   .goal-card {
     padding: 16px;
