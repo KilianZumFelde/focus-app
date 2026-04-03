@@ -51,3 +51,4 @@ For mobile: host over HTTPS and install as PWA via browser "Add to Home Screen".
 - "Clear all" button appears in the header when viewing completed tasks (desktop and mobile); confirms before deleting
 - Area cards use tap animation (80ms delay before navigation) so the press is always visible
 - Service worker uses network-first strategy so updates deploy immediately without cache bumping
+- Long-press (800ms) on "focus." title (desktop) or "This Week" bottom nav (mobile) → Export/Import data menu. Export saves a JSON backup; Import restores from a backup file. JSON includes version, exportedAt, areas, tasks, goals.

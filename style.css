@@ -49,6 +49,27 @@ body {
   font-weight: 700;
   letter-spacing: -0.5px;
   color: var(--text-primary);
+  cursor: default;
+  user-select: none;
+}
+
+/* Desktop data menu — positioned near sidebar title */
+.data-menu:not(.hidden) {
+  position: fixed;
+  top: 80px;
+  left: 24px;
+  bottom: auto;
+  transform: none;
+}
+
+@media (max-width: 768px) {
+  .data-menu:not(.hidden) {
+    position: fixed;
+    bottom: 80px;
+    top: auto;
+    left: 50%;
+    transform: translateX(-50%);
+  }
 }
 
 .sidebar-nav {
@@ -965,6 +986,48 @@ input[type="number"]:focus {
     line-height: 1;
     margin-top: -2px;
   }
+
+  /* ─── Data menu (export/import) ─────────────────────── */
+  .data-menu {
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--surface);
+    border-radius: var(--radius);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.16);
+    overflow: hidden;
+    z-index: 30;
+    min-width: 180px;
+  }
+
+  .data-menu.hidden { display: none; }
+
+  .data-menu-item {
+    display: block;
+    width: 100%;
+    padding: 16px 20px;
+    background: none;
+    border: none;
+    text-align: left;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-primary);
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.12s;
+  }
+
+  .data-menu-item + .data-menu-item { border-top: 1px solid var(--border); }
+  .data-menu-item:active { background: var(--bg); }
+
+  .data-menu-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 29;
+  }
+
+  .data-menu-overlay.hidden { display: none; }
 
   /* ─── + action menu ──────────────────────────────────── */
   .add-action-menu {

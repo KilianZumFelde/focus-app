@@ -897,6 +897,74 @@ function showThisWeekPopup(card, task) {
   card.appendChild(popup);
 }
 
+// ─── Export / Import ─────────────────────────────────────────────────────────
+
+function openDataMenu() {
+  document.getElementById('data-menu').classList.remove('hidden');
+  document.getElementById('data-menu-overlay').classList.remove('hidden');
+}
+
+function closeDataMenu() {
+  document.getElementById('data-menu').classList.add('hidden');
+  document.getElementById('data-menu-overlay').classList.add('hidden');
+}
+
+function exportData() {
+  const payload = {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    areas: state.areas,
+    tasks: state.tasks,
+    goals: state.goals,
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `focus-backup-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  closeDataMenu();
+}
+
+function importData(file) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data.areas || !data.tasks || !data.goals) {
+        alert('Invalid backup file.');
+        return;
+      }
+      if (!confirm(`This will replace all your current data with the backup from ${data.exportedAt ? data.exportedAt.slice(0,10) : 'unknown date'}. Continue?`)) return;
+      state.areas = data.areas;
+      state.tasks = data.tasks;
+      state.goals = data.goals;
+      commit();
+      closeDataMenu();
+    } catch {
+      alert('Could not read file. Make sure it\'s a valid focus. backup.');
+    }
+  };
+  reader.readAsText(file);
+}
+
+function addDataMenuLongPress(el) {
+  let holdTimer = null;
+  el.addEventListener('touchstart', () => {
+    holdTimer = setTimeout(() => { holdTimer = null; openDataMenu(); }, 800);
+  }, { passive: true });
+  el.addEventListener('touchend',   () => { if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; } });
+  el.addEventListener('touchcancel',() => { if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; } });
+  el.addEventListener('touchmove',  () => { if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; } }, { passive: true });
+  // Desktop: long mousedown
+  el.addEventListener('mousedown', () => {
+    holdTimer = setTimeout(() => { holdTimer = null; openDataMenu(); }, 800);
+  });
+  el.addEventListener('mouseup',   () => { if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; } });
+  el.addEventListener('mouseleave',() => { if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; } });
+}
+
 // ─── Area delete popup ────────────────────────────────────────────────────────
 
 function showAreaDeletePopup(areaId, areaName, anchorCard) {
@@ -1154,6 +1222,21 @@ document.addEventListener('DOMContentLoaded', () => {
       updateMobileBottomNav('areas');
     }
   });
+
+  // Long-press on "focus." title (desktop) and "This Week" nav (mobile) → data menu
+  addDataMenuLongPress(document.querySelector('.app-name'));
+  addDataMenuLongPress(document.getElementById('mobile-nav-this-week'));
+
+  // Data menu
+  document.getElementById('data-export').addEventListener('click', exportData);
+  document.getElementById('data-import').addEventListener('click', () => {
+    document.getElementById('import-file-input').click();
+  });
+  document.getElementById('import-file-input').addEventListener('change', (e) => {
+    if (e.target.files[0]) importData(e.target.files[0]);
+    e.target.value = '';
+  });
+  document.getElementById('data-menu-overlay').addEventListener('click', closeDataMenu);
 
   // Register service worker
   if ('serviceWorker' in navigator) {
