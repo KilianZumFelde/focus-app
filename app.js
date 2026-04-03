@@ -1020,10 +1020,12 @@ document.addEventListener('DOMContentLoaded', () => {
       modalContents.forEach(el => {
         if (keyboardHeight > 100) {
           el.style.setProperty('--keyboard-offset', keyboardHeight + 'px');
+          el.style.maxHeight = (viewportHeight * 0.92) + 'px';
           el.classList.add('keyboard-open');
         } else {
           el.classList.remove('keyboard-open');
           el.style.removeProperty('--keyboard-offset');
+          el.style.maxHeight = '';
         }
       });
     });
