@@ -712,37 +712,19 @@ input[type="number"]:focus {
     display: none;
   }
 
-  /* ─── Completed toggle ───────────────────────────────── */
-  .completed-toggle {
-    display: flex;
-    margin: 0 20px 16px;
-    background: var(--sidebar-bg);
-    border-radius: 20px;
-    padding: 3px;
-    gap: 2px;
-  }
-
-  .completed-toggle.hidden { display: none; }
-
-  .toggle-btn {
-    flex: 1;
-    padding: 7px 12px;
-    border: none;
+  /* ─── Completed header link ──────────────────────────── */
+  .completed-header-link {
     background: none;
-    border-radius: 16px;
+    border: none;
     font-size: 13px;
-    font-weight: 500;
-    color: var(--text-secondary);
+    color: var(--text-muted);
     cursor: pointer;
-    transition: all 0.15s;
     font-family: inherit;
+    padding: 0;
+    margin-left: auto;
   }
 
-  .toggle-btn.active {
-    background: var(--surface);
-    color: var(--text-primary);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-  }
+  .completed-header-link:active { color: var(--text-secondary); }
 
   /* ─── Areas screen ───────────────────────────────────── */
   .areas-screen {
@@ -788,53 +770,26 @@ input[type="number"]:focus {
     padding: 8px 0;
   }
 
-  .area-screen-row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 20px 20px;
-    background: none;
-    border: none;
-    border-bottom: 1px solid var(--border);
-    width: 100%;
-    text-align: left;
+  .area-screen-card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    border-left: 4px solid #ddd;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    padding: 16px 20px;
+    margin: 0 16px 10px;
     cursor: pointer;
-    font-size: 16px;
-    color: var(--text-primary);
-    font-family: inherit;
-    transition: background 0.15s, transform 0.1s;
+    transition: box-shadow 0.15s, transform 0.1s;
   }
 
-  .area-screen-row:active {
-    background: var(--sidebar-bg);
+  .area-screen-card:active {
     transform: scale(0.98);
+    box-shadow: 0 3px 10px rgba(0,0,0,0.09);
   }
 
-  .area-screen-row.muted {
-    font-size: 13px;
-    color: var(--text-muted);
-    border-bottom: none;
-    padding-top: 12px;
-    padding-bottom: 12px;
-  }
-
-  .area-screen-row .area-color-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
-
-  .area-screen-chevron {
-    margin-left: auto;
-    color: var(--text-muted);
-    font-size: 14px;
-  }
-
-  .area-screen-divider {
-    height: 1px;
-    background: var(--border);
-    margin: 4px 0;
+  .area-screen-card-name {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-primary);
   }
 
   .area-screen-add {
@@ -1008,6 +963,5 @@ input[type="number"]:focus {
   .add-action-menu,
   .add-action-overlay,
   .areas-screen,
-  .completed-toggle,
   .back-btn { display: none !important; }
 }

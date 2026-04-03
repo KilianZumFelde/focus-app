@@ -223,10 +223,6 @@ function renderGoals(taskList) {
           <span class="counter-display">${goal.count} / ${goal.target}</span>
           <button class="counter-btn increment-btn" data-goal-id="${goal.id}">+</button>
         </div>
-        <div class="goal-card-actions">
-          <button class="action-btn edit-goal-btn" data-goal-id="${goal.id}" title="Edit">✎</button>
-          <button class="action-btn delete-btn delete-goal-btn" data-goal-id="${goal.id}" title="Delete">×</button>
-        </div>
       </div>
     `;
 
@@ -241,13 +237,6 @@ function renderGoals(taskList) {
   taskList.querySelectorAll('.decrement-btn').forEach(btn => {
     btn.addEventListener('click', () => decrementGoal(btn.dataset.goalId));
   });
-  taskList.querySelectorAll('.edit-goal-btn').forEach(btn => {
-    btn.addEventListener('click', () => openEditGoal(btn.dataset.goalId));
-  });
-  taskList.querySelectorAll('.delete-goal-btn').forEach(btn => {
-    btn.addEventListener('click', () => deleteGoal(btn.dataset.goalId));
-  });
-
   return true;
 }
 
@@ -305,6 +294,30 @@ function renderTasks() {
     }
   }
 
+  // On mobile: show "Completed" link in header for area/all views,
+  // or a back link when viewing completed inside an area
+  const completedLink = document.getElementById('completed-link');
+  if (completedLink) completedLink.remove();
+
+  if (isMobile()) {
+    const isAreaOrAll = state.currentView === 'all' || state.areas.find(a => a.id === state.currentView);
+    if (isAreaOrAll && !mobileShowCompleted) {
+      const link = document.createElement('button');
+      link.id = 'completed-link';
+      link.className = 'completed-header-link';
+      link.textContent = 'Completed';
+      link.addEventListener('click', () => {
+        mobileShowCompleted = true;
+        render();
+      });
+      document.querySelector('.header-left').appendChild(link);
+    }
+  }
+
+  if (mobileShowCompleted) {
+    title += ' — Completed';
+  }
+
   viewTitle.textContent = title;
   taskList.innerHTML = '';
 
@@ -338,9 +351,6 @@ function renderTasks() {
       <div class="task-card-main">
         <div class="task-card-content">
           <div class="task-title">${escapeHtml(task.title)}</div>
-          ${task.description
-            ? `<div class="task-desc">${escapeHtml(task.description)}</div>`
-            : ''}
           <div class="task-meta">${buildAreaTag(area)}</div>
         </div>
         <div class="task-card-actions">
@@ -350,7 +360,6 @@ function renderTasks() {
               title="${task.thisWeek ? 'Remove from This Week' : 'Add to This Week'}">
               ${task.thisWeek ? '◈' : '◇'}
             </button>
-            <button class="action-btn edit-btn" data-task-id="${task.id}" title="Edit">✎</button>
             <button class="action-btn complete-btn" data-task-id="${task.id}" title="Mark as done">✓</button>
           ` : `
             <button class="action-btn delete-btn" data-task-id="${task.id}" title="Delete permanently">×</button>
@@ -369,9 +378,6 @@ function renderTasks() {
   // Attach task action listeners
   taskList.querySelectorAll('.thisweek-btn').forEach(btn => {
     btn.addEventListener('click', () => toggleThisWeek(btn.dataset.taskId));
-  });
-  taskList.querySelectorAll('.edit-btn').forEach(btn => {
-    btn.addEventListener('click', () => openEditTask(btn.dataset.taskId));
   });
   taskList.querySelectorAll('.complete-btn').forEach(btn => {
     btn.addEventListener('click', () => completeTask(btn.dataset.taskId));
@@ -727,7 +733,6 @@ function openAddTask() {
 
   document.getElementById('modal-title').textContent = 'New task';
   document.getElementById('task-title-input').value = '';
-  document.getElementById('task-desc-input').value = '';
   document.getElementById('task-thisweek-check').checked = state.currentView === 'this-week';
   populateAreaSelect('task-area-select', defaultAreaId);
 
@@ -735,21 +740,6 @@ function openAddTask() {
   document.getElementById('task-title-input').focus();
 }
 
-function openEditTask(id) {
-  const task = state.tasks.find(t => t.id === id);
-  if (!task) return;
-
-  editingTaskId = id;
-
-  document.getElementById('modal-title').textContent = 'Edit task';
-  document.getElementById('task-title-input').value = task.title;
-  document.getElementById('task-desc-input').value = task.description || '';
-  document.getElementById('task-thisweek-check').checked = task.thisWeek;
-  populateAreaSelect('task-area-select', task.areaId);
-
-  document.getElementById('task-modal').classList.remove('hidden');
-  document.getElementById('task-title-input').focus();
-}
 
 function closeTaskModal() {
   document.getElementById('task-modal').classList.add('hidden');
@@ -763,23 +753,20 @@ function saveTask() {
     return;
   }
 
-  const areaId      = document.getElementById('task-area-select').value;
-  const description = document.getElementById('task-desc-input').value.trim();
-  const thisWeek    = document.getElementById('task-thisweek-check').checked;
+  const areaId   = document.getElementById('task-area-select').value;
+  const thisWeek = document.getElementById('task-thisweek-check').checked;
 
   if (editingTaskId) {
     const task = state.tasks.find(t => t.id === editingTaskId);
     if (task) {
-      task.title       = title;
-      task.description = description;
-      task.areaId      = areaId;
-      task.thisWeek    = thisWeek;
+      task.title    = title;
+      task.areaId   = areaId;
+      task.thisWeek = thisWeek;
     }
   } else {
     state.tasks.push({
       id:          generateId(),
       title,
-      description,
       areaId,
       thisWeek,
       done:        false,
@@ -843,20 +830,17 @@ function renderAreasScreen() {
   const list = document.getElementById('areas-screen-list');
   list.innerHTML = '';
 
-  // Area rows
+  // Area rows — styled as cards
   state.areas.forEach(area => {
-    const btn = document.createElement('button');
-    btn.className = 'area-screen-row';
-    btn.innerHTML = `
-      <span class="area-color-dot" style="background:${area.color}"></span>
-      <span>${escapeHtml(area.name)}</span>
-      <span class="area-screen-chevron">›</span>
-    `;
-    btn.addEventListener('click', () => {
+    const card = document.createElement('div');
+    card.className = 'area-screen-card';
+    card.style.borderLeftColor = area.color;
+    card.innerHTML = `<span class="area-screen-card-name">${escapeHtml(area.name)}</span>`;
+    card.addEventListener('click', () => {
       hideAreasScreen();
       setMobileView(area.id);
     });
-    list.appendChild(btn);
+    list.appendChild(card);
   });
 
   // Add area
@@ -888,20 +872,15 @@ function updateBackBtn(view) {
   const backBtn = document.getElementById('back-btn');
   const isArea = state.areas.find(a => a.id === view);
   const isAll  = view === 'all';
-  if ((isArea || isAll) && isMobile()) {
+  if ((isArea || isAll || mobileShowCompleted) && isMobile()) {
     backBtn.classList.remove('hidden');
   } else {
     backBtn.classList.add('hidden');
   }
 }
 
-function updateCompletedToggle(view) {
-  const toggle = document.getElementById('completed-toggle');
-  if (!isMobile()) return;
-  const showToggle = view === 'all' || state.areas.find(a => a.id === view);
-  toggle.classList.toggle('hidden', !showToggle);
-  document.getElementById('toggle-open').classList.toggle('active', !mobileShowCompleted);
-  document.getElementById('toggle-done').classList.toggle('active', mobileShowCompleted);
+function updateCompletedToggle() {
+  // No-op: completed toggle removed, now using inline header link
 }
 
 function openAddActionMenu() {
@@ -951,10 +930,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (e.key === 'Enter') saveTask();
     if (e.key === 'Escape') closeTaskModal();
   });
-  document.getElementById('task-desc-input').addEventListener('keydown', e => {
-    if (e.key === 'Escape') closeTaskModal();
-  });
-
   // Area modal
   document.getElementById('area-modal-cancel').addEventListener('click', closeAreaModal);
   document.getElementById('area-modal-save').addEventListener('click', saveArea);
@@ -994,20 +969,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Mobile: back button
   document.getElementById('back-btn').addEventListener('click', () => {
-    showAreasScreen();
-    updateMobileBottomNav('areas');
-  });
-
-  // Mobile: completed toggle
-  document.getElementById('toggle-open').addEventListener('click', () => {
-    mobileShowCompleted = false;
-    updateCompletedToggle(state.currentView);
-    render();
-  });
-  document.getElementById('toggle-done').addEventListener('click', () => {
-    mobileShowCompleted = true;
-    updateCompletedToggle(state.currentView);
-    render();
+    if (mobileShowCompleted) {
+      mobileShowCompleted = false;
+      updateBackBtn(state.currentView);
+      render();
+    } else {
+      showAreasScreen();
+      updateMobileBottomNav('areas');
+    }
   });
 
   // Register service worker
