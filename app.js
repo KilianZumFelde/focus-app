@@ -342,7 +342,10 @@ function renderTasks() {
     emptyState.classList.add('hidden');
   }
 
-  tasks.forEach(task => {
+  const isCompleted = state.currentView === 'completed' || mobileShowCompleted;
+  const isAreaView = !!state.areas.find(a => a.id === state.currentView) && !isCompleted;
+
+  function appendTaskCard(task, section) {
     const area = state.areas.find(a => a.id === task.areaId);
     const { borderColor } = getAreaColors(area);
 
@@ -350,8 +353,7 @@ function renderTasks() {
     card.className = 'task-card';
     card.style.borderLeftColor = borderColor;
     card.dataset.taskId = task.id;
-
-    const isCompleted = state.currentView === 'completed' || mobileShowCompleted;
+    if (section) card.dataset.section = section;
 
     card.innerHTML = `
       <div class="task-card-main">
@@ -374,11 +376,36 @@ function renderTasks() {
     }
 
     if (isDraggable && !isCompleted) {
-      if (!isMobile()) addDragHandlers(card, task.id);
-      addTouchDragHandlers(card, task.id, 'task', card.querySelector('.drag-handle'));
+      if (!isMobile()) addDragHandlers(card, task.id, section);
+      addTouchDragHandlers(card, task.id, 'task', card.querySelector('.drag-handle'), section);
     }
     taskList.appendChild(card);
-  });
+  }
+
+  if (isAreaView) {
+    const thisWeekTasks = tasks.filter(t => t.thisWeek);
+    const otherTasks    = tasks.filter(t => !t.thisWeek);
+
+    if (thisWeekTasks.length > 0) {
+      const label = document.createElement('span');
+      label.className = 'section-label';
+      label.textContent = 'TASKS FOR THIS WEEK';
+      taskList.appendChild(label);
+      thisWeekTasks.forEach(t => appendTaskCard(t, 'thisweek'));
+    }
+
+    if (otherTasks.length > 0) {
+      if (goalsRendered || thisWeekTasks.length > 0) {
+        const label = document.createElement('span');
+        label.className = 'section-label';
+        label.textContent = 'TASKS';
+        taskList.appendChild(label);
+      }
+      otherTasks.forEach(t => appendTaskCard(t, 'other'));
+    }
+  } else {
+    tasks.forEach(t => appendTaskCard(t, null));
+  }
 
   taskList.querySelectorAll('.delete-btn').forEach(btn => {
     btn.addEventListener('click', () => deleteTask(btn.dataset.taskId));
@@ -551,7 +578,7 @@ function saveGoal() {
 
 let draggingTaskId = null;
 
-function addDragHandlers(card, taskId) {
+function addDragHandlers(card, taskId, section = null) {
   card.setAttribute('draggable', 'true');
 
   card.addEventListener('dragstart', (e) => {
@@ -571,6 +598,7 @@ function addDragHandlers(card, taskId) {
   card.addEventListener('dragover', (e) => {
     e.preventDefault();
     if (draggingTaskId === taskId) return;
+    if (section && card.dataset.section !== section) return;
     const rect = card.getBoundingClientRect();
     const inTopHalf = e.clientY < rect.top + rect.height / 2;
     document.querySelectorAll('.drag-over-top, .drag-over-bottom').forEach(el => {
@@ -590,6 +618,7 @@ function addDragHandlers(card, taskId) {
   card.addEventListener('drop', (e) => {
     e.preventDefault();
     if (!draggingTaskId || draggingTaskId === taskId) return;
+    if (section && card.dataset.section !== section) return;
     const insertBefore = card.classList.contains('drag-over-top');
     card.classList.remove('drag-over-top', 'drag-over-bottom');
     reorderTask(draggingTaskId, taskId, insertBefore);
@@ -618,15 +647,16 @@ function reorderGoal(fromId, toId, insertBefore) {
 
 // ─── Touch drag-and-drop ──────────────────────────────────────────────────────
 
-function addTouchDragHandlers(card, itemId, type, handle) {
+function addTouchDragHandlers(card, itemId, type, handle, section = null) {
   let isDragging = false;
   let clone = null;
   let lastTarget = null;
 
   function getCards() {
-    return type === 'task'
+    const all = type === 'task'
       ? [...document.querySelectorAll('.task-card[data-task-id]')]
       : [...document.querySelectorAll('.goal-card[data-goal-id]')];
+    return section ? all.filter(c => c.dataset.section === section) : all;
   }
 
   function cleanup() {
