@@ -249,7 +249,6 @@ function renderGoals(taskList) {
     card.dataset.goalId = goal.id;
 
     card.innerHTML = `
-      <span class="goal-corner-icon">↻</span>
       <div class="goal-card-main">
         <div class="goal-card-content">
           <div class="goal-title-row">

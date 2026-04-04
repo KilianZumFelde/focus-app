@@ -589,16 +589,10 @@ input[type="number"]:focus {
 }
 
 .drag-handle::after {
-  content: '⋮';
-  font-size: 14px;
+  content: '⋮⋮';
+  font-size: 13px;
   color: var(--text-muted);
-  opacity: 0;
-  transition: opacity 0.15s;
-}
-
-.task-card:hover .drag-handle::after,
-.goal-card:hover .drag-handle::after {
-  opacity: 1;
+  letter-spacing: -4px;
 }
 
 /* ─── Card tap cursor ───────────────────────────────────────────────────────── */
