@@ -838,6 +838,18 @@ input[type="number"]:focus {
     flex: 1;
   }
 
+  /* Back button: fixed bottom-right above the nav bar */
+  .back-btn {
+    position: fixed;
+    bottom: 76px;
+    right: 20px;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text-primary);
+    z-index: 25;
+    padding: 4px 8px;
+  }
+
   .task-list {
     padding: 0 20px 32px;
   }
