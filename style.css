@@ -462,9 +462,6 @@ body {
 }
 
 .goal-title-row {
-  display: flex;
-  align-items: center;
-  gap: 7px;
   margin-bottom: 6px;
 }
 
@@ -472,6 +469,16 @@ body {
   font-size: 13px;
   color: var(--text-muted);
   flex-shrink: 0;
+}
+
+.goal-corner-icon {
+  position: absolute;
+  top: 7px;
+  right: 52px;
+  font-size: 11px;
+  color: var(--text-muted);
+  pointer-events: none;
+  opacity: 0.6;
 }
 
 .goal-title {

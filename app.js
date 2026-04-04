@@ -249,10 +249,10 @@ function renderGoals(taskList) {
     card.dataset.goalId = goal.id;
 
     card.innerHTML = `
+      <span class="goal-corner-icon">↻</span>
       <div class="goal-card-main">
         <div class="goal-card-content">
           <div class="goal-title-row">
-            <span class="goal-icon">↻</span>
             <span class="goal-title">${escapeHtml(goal.title)}</span>
           </div>
           <div class="task-meta">${buildAreaTag(area)}</div>
