@@ -630,6 +630,17 @@ input[type="number"]:focus {
   padding: 4px 8px;
 }
 
+.confirm-green {
+  background: none;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  color: #3faa6e;
+  cursor: pointer;
+  font-family: inherit;
+  padding: 4px 8px;
+}
+
 .area-delete-cancel {
   background: none;
   border: none;

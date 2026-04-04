@@ -864,15 +864,16 @@ function showThisWeekPopup(card, task) {
 
   const popup = document.createElement('div');
   popup.className = 'thisweek-popup';
+  const confirmClass = task.thisWeek ? 'area-delete-confirm' : 'confirm-green';
   popup.innerHTML = `
     <div class="area-delete-popup-inner">
       <span class="area-delete-label">${label}</span>
-      <button class="area-delete-confirm">${actionLabel}</button>
+      <button class="${confirmClass}">${actionLabel}</button>
       <button class="area-delete-cancel">Cancel</button>
     </div>
   `;
 
-  popup.querySelector('.area-delete-confirm').addEventListener('click', (e) => {
+  popup.querySelector(`.${confirmClass}`).addEventListener('click', (e) => {
     e.stopPropagation();
     popup.remove();
     toggleThisWeek(task.id);
@@ -904,11 +905,11 @@ function showTaskCompletePopup(card, task) {
   popup.innerHTML = `
     <div class="area-delete-popup-inner">
       <span class="area-delete-label">Complete task?</span>
-      <button class="area-delete-confirm">Complete</button>
+      <button class="confirm-green">Complete</button>
       <button class="area-delete-cancel">Cancel</button>
     </div>
   `;
-  popup.querySelector('.area-delete-confirm').addEventListener('click', (e) => {
+  popup.querySelector('.confirm-green').addEventListener('click', (e) => {
     e.stopPropagation();
     popup.remove();
     completeTask(task.id);
@@ -954,7 +955,7 @@ function showGoalCounterPopup(card, goal) {
       <button class="counter-btn popup-decrement" ${g.count <= 0 ? 'disabled' : ''}>−</button>
       <span class="popup-count counter-display">${g.count} / ${g.target}</span>
       <button class="counter-btn popup-increment" ${g.count >= g.target ? 'disabled' : ''}>+</button>
-      <button class="area-delete-cancel" style="margin-left:auto;">Done</button>
+      <button class="confirm-green" style="margin-left:auto;">Done</button>
     </div>
   `;
 
@@ -968,7 +969,7 @@ function showGoalCounterPopup(card, goal) {
     const g = getGoal();
     if (g && g.count < g.target) { g.count++; saveState(); updateDisplay(); }
   });
-  popup.querySelector('.area-delete-cancel').addEventListener('click', (e) => {
+  popup.querySelector('.confirm-green').addEventListener('click', (e) => {
     e.stopPropagation();
     popup.remove();
     render();
