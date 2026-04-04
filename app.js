@@ -312,6 +312,18 @@ function renderTasks() {
 
   viewTitle.textContent = title;
 
+  // Mobile: "focus." tap link in This Week header
+  const existingFocusLink = document.getElementById('focus-data-link');
+  if (existingFocusLink) existingFocusLink.remove();
+  if (isMobile() && state.currentView === 'this-week') {
+    const focusLink = document.createElement('button');
+    focusLink.id = 'focus-data-link';
+    focusLink.className = 'completed-header-link';
+    focusLink.textContent = 'focus.';
+    focusLink.addEventListener('click', openDataMenu);
+    document.querySelector('.header-left').appendChild(focusLink);
+  }
+
   // Show "Clear all" button in header when viewing completed tasks
   const existingClear = document.getElementById('clear-completed-btn');
   if (existingClear) existingClear.remove();
@@ -1334,9 +1346,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Long-press on "focus." title (desktop) and "This Week" nav (mobile) → data menu
+  // Long-press on "focus." title (desktop only) → data menu
   addDataMenuLongPress(document.querySelector('.app-name'));
-  addDataMenuLongPress(document.getElementById('mobile-nav-this-week'));
 
   // Data menu
   document.getElementById('data-export').addEventListener('click', exportData);
