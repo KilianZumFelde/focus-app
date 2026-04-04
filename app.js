@@ -20,13 +20,7 @@ function pickNextColor() {
 // ─── Default state ────────────────────────────────────────────────────────────
 
 const DEFAULT_STATE = {
-  areas: [
-    { id: 'a1', name: 'Finances', color: generateAreaColor(0) },
-    { id: 'a2', name: 'Health',   color: generateAreaColor(1) },
-    { id: 'a3', name: 'Social',   color: generateAreaColor(2) },
-    { id: 'a4', name: 'Job',      color: generateAreaColor(3) },
-    { id: 'a5', name: 'Misc',     color: generateAreaColor(4) },
-  ],
+  areas: [],
   tasks: [],
   goals: [],
   currentView: 'this-week',
