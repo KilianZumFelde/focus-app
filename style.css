@@ -1121,18 +1121,17 @@ input[type="number"]:focus {
 
   .add-action-overlay.hidden { display: none; }
 
-  /* ─── Modals: full screen on mobile ─────────────────── */
+  /* ─── Modals: full-screen on mobile, content in bottom half ── */
   .modal-content {
-    border-radius: 18px 18px 0 0;
+    border-radius: 24px 24px 0 0;
     position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
     max-width: 100%;
-    max-height: 90vh;
+    max-height: 75vh;
     overflow-y: auto;
-    padding: 28px 24px 40px;
-    transition: bottom 0.15s ease;
+    padding: 28px 24px 48px;
   }
 
 /* ─── Touch-friendly cards ───────────────────────────── */
@@ -1150,6 +1149,66 @@ input[type="number"]:focus {
     width: 36px;
     height: 36px;
   }
+}
+
+/* ─── Mobile: area pills selector ───────────────────────────────────────────── */
+.area-pills-scroll {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 0 8px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.area-pills-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.area-pill {
+  flex-shrink: 0;
+  padding: 7px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: border-color 0.12s;
+  white-space: nowrap;
+}
+
+.area-pill.selected {
+  border-color: var(--text-primary);
+}
+
+/* ─── Mobile: This Week segmented toggle ─────────────────────────────────────── */
+.week-toggle {
+  display: flex;
+  background: var(--bg);
+  border-radius: 10px;
+  padding: 3px;
+  gap: 3px;
+}
+
+.week-toggle-option {
+  flex: 1;
+  padding: 9px;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.12s;
+  font-family: inherit;
+}
+
+.week-toggle-option.selected {
+  background: var(--surface);
+  color: var(--text-primary);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
 }
 
 /* ─── Weekly review modal ───────────────────────────────────────────────────── */

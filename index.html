@@ -121,15 +121,29 @@
       <div class="form-group">
         <input type="text" id="task-title-input" placeholder="Task title" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
       </div>
-      <div class="form-group">
+      <!-- Desktop: dropdown -->
+      <div class="form-group" id="task-area-select-group">
         <label for="task-area-select">Area</label>
         <select id="task-area-select"></select>
       </div>
-      <div class="form-group checkbox-group">
+      <!-- Mobile: pills -->
+      <div class="form-group hidden" id="task-area-pills-group">
+        <label>Area</label>
+        <div class="area-pills-scroll" id="task-area-pills"></div>
+      </div>
+      <!-- Desktop: checkbox -->
+      <div class="form-group checkbox-group" id="task-thisweek-check-group">
         <label>
           <input type="checkbox" id="task-thisweek-check" />
           Add to This Week
         </label>
+      </div>
+      <!-- Mobile: toggle -->
+      <div class="form-group hidden" id="task-thisweek-toggle-group">
+        <div class="week-toggle">
+          <button class="week-toggle-option selected" id="toggle-this-week">This Week</button>
+          <button class="week-toggle-option" id="toggle-later">Later</button>
+        </div>
       </div>
       <div class="modal-actions">
         <button class="btn-secondary" id="modal-cancel">Cancel</button>
@@ -146,9 +160,15 @@
       <div class="form-group">
         <input type="text" id="goal-title-input" placeholder="Goal title" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
       </div>
-      <div class="form-group">
+      <!-- Desktop: dropdown -->
+      <div class="form-group" id="goal-area-select-group">
         <label for="goal-area-select">Area</label>
         <select id="goal-area-select"></select>
+      </div>
+      <!-- Mobile: pills -->
+      <div class="form-group hidden" id="goal-area-pills-group">
+        <label>Area</label>
+        <div class="area-pills-scroll" id="goal-area-pills"></div>
       </div>
       <div class="form-group">
         <label for="goal-target-input">Weekly target</label>

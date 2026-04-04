@@ -572,7 +572,17 @@ function openAddGoal() {
   document.getElementById('goal-modal-title').textContent = 'New goal';
   document.getElementById('goal-title-input').value = '';
   document.getElementById('goal-target-input').value = '1';
-  populateAreaSelect('goal-area-select', defaultAreaId);
+
+  if (isMobile()) {
+    document.getElementById('goal-area-select-group').classList.add('hidden');
+    document.getElementById('goal-area-pills-group').classList.remove('hidden');
+    populateAreaPills('goal-area-pills', defaultAreaId);
+  } else {
+    document.getElementById('goal-area-select-group').classList.remove('hidden');
+    document.getElementById('goal-area-pills-group').classList.add('hidden');
+    populateAreaSelect('goal-area-select', defaultAreaId);
+  }
+
   document.getElementById('goal-modal').classList.remove('hidden');
   document.getElementById('goal-title-input').focus();
 }
@@ -599,7 +609,7 @@ function saveGoal() {
   const target = parseInt(document.getElementById('goal-target-input').value, 10);
   if (!title) { document.getElementById('goal-title-input').focus(); return; }
   if (!target || target < 1) { document.getElementById('goal-target-input').focus(); return; }
-  const areaId = document.getElementById('goal-area-select').value;
+  const areaId = isMobile() ? getSelectedAreaPill('goal-area-pills') : document.getElementById('goal-area-select').value;
 
   if (editingGoalId) {
     const goal = state.goals.find(g => g.id === editingGoalId);
@@ -803,16 +813,55 @@ function populateAreaSelect(selectId, selectedAreaId) {
     .join('');
 }
 
+function populateAreaPills(containerId, selectedAreaId) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = '';
+  state.areas.forEach(area => {
+    const { tagBg, tagColor } = getAreaColors(area);
+    const pill = document.createElement('button');
+    pill.className = 'area-pill' + (area.id === selectedAreaId ? ' selected' : '');
+    pill.dataset.areaId = area.id;
+    pill.style.background = tagBg;
+    pill.style.color = tagColor;
+    pill.textContent = area.name;
+    pill.addEventListener('click', () => {
+      container.querySelectorAll('.area-pill').forEach(p => p.classList.remove('selected'));
+      pill.classList.add('selected');
+    });
+    container.appendChild(pill);
+  });
+}
+
+function getSelectedAreaPill(containerId) {
+  const selected = document.querySelector(`#${containerId} .area-pill.selected`);
+  return selected ? selected.dataset.areaId : (state.areas[0]?.id || null);
+}
+
 function openAddTask() {
   editingTaskId = null;
-
-  // Default area: current area view, otherwise first area
   const defaultAreaId = getDefaultAreaId();
+  const defaultThisWeek = state.currentView === 'this-week';
 
   document.getElementById('modal-title').textContent = 'New task';
   document.getElementById('task-title-input').value = '';
-  document.getElementById('task-thisweek-check').checked = state.currentView === 'this-week';
-  populateAreaSelect('task-area-select', defaultAreaId);
+
+  if (isMobile()) {
+    document.getElementById('task-area-select-group').classList.add('hidden');
+    document.getElementById('task-area-pills-group').classList.remove('hidden');
+    document.getElementById('task-thisweek-check-group').classList.add('hidden');
+    document.getElementById('task-thisweek-toggle-group').classList.remove('hidden');
+    populateAreaPills('task-area-pills', defaultAreaId);
+    // Set toggle state
+    document.getElementById('toggle-this-week').classList.toggle('selected', defaultThisWeek);
+    document.getElementById('toggle-later').classList.toggle('selected', !defaultThisWeek);
+  } else {
+    document.getElementById('task-area-select-group').classList.remove('hidden');
+    document.getElementById('task-area-pills-group').classList.add('hidden');
+    document.getElementById('task-thisweek-check-group').classList.remove('hidden');
+    document.getElementById('task-thisweek-toggle-group').classList.add('hidden');
+    document.getElementById('task-thisweek-check').checked = defaultThisWeek;
+    populateAreaSelect('task-area-select', defaultAreaId);
+  }
 
   document.getElementById('task-modal').classList.remove('hidden');
   document.getElementById('task-title-input').focus();
@@ -831,8 +880,10 @@ function saveTask() {
     return;
   }
 
-  const areaId   = document.getElementById('task-area-select').value;
-  const thisWeek = document.getElementById('task-thisweek-check').checked;
+  const areaId   = isMobile() ? getSelectedAreaPill('task-area-pills') : document.getElementById('task-area-select').value;
+  const thisWeek = isMobile()
+    ? document.getElementById('toggle-this-week').classList.contains('selected')
+    : document.getElementById('task-thisweek-check').checked;
 
   if (editingTaskId) {
     const task = state.tasks.find(t => t.id === editingTaskId);
@@ -1363,6 +1414,16 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('goal-target-input').addEventListener('keydown', e => {
     if (e.key === 'Enter') saveGoal();
     if (e.key === 'Escape') closeGoalModal();
+  });
+
+  // Mobile: This Week toggle
+  document.getElementById('toggle-this-week').addEventListener('click', () => {
+    document.getElementById('toggle-this-week').classList.add('selected');
+    document.getElementById('toggle-later').classList.remove('selected');
+  });
+  document.getElementById('toggle-later').addEventListener('click', () => {
+    document.getElementById('toggle-later').classList.add('selected');
+    document.getElementById('toggle-this-week').classList.remove('selected');
   });
 
   // Task modal
