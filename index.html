@@ -68,7 +68,7 @@
 
       <div id="task-list" class="task-list"></div>
       <div id="empty-state" class="empty-state hidden">
-        <p>What are you focusing on? Add your first focus area.</p>
+        <p id="empty-state-text">Nothing planned for this week.</p>
       </div>
     </main>
 
@@ -170,9 +170,19 @@
         <label>Area</label>
         <div class="area-pills-scroll" id="goal-area-pills"></div>
       </div>
-      <div class="form-group">
+      <!-- Desktop: number input -->
+      <div class="form-group" id="goal-target-input-group">
         <label for="goal-target-input">Weekly target</label>
         <input type="text" inputmode="numeric" id="goal-target-input" min="1" value="1" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+      </div>
+      <!-- Mobile: +/- counter -->
+      <div class="form-group hidden" id="goal-target-counter-group">
+        <label>Weekly target</label>
+        <div class="goal-target-counter">
+          <button class="counter-btn" id="goal-target-decrement">−</button>
+          <span class="counter-display" id="goal-target-display">1</span>
+          <button class="counter-btn" id="goal-target-increment">+</button>
+        </div>
       </div>
       <div class="modal-actions">
         <button class="btn-secondary" id="goal-modal-cancel">Cancel</button>

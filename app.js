@@ -20,7 +20,13 @@ function pickNextColor() {
 // ─── Default state ────────────────────────────────────────────────────────────
 
 const DEFAULT_STATE = {
-  areas: [],
+  areas: [
+    { id: 'a1', name: 'Career',  color: generateAreaColor(0) },
+    { id: 'a2', name: 'Health',  color: generateAreaColor(1) },
+    { id: 'a3', name: 'Music',   color: generateAreaColor(2) },
+    { id: 'a4', name: 'Bachata', color: generateAreaColor(3) },
+    { id: 'a5', name: 'Misc',    color: generateAreaColor(4) },
+  ],
   tasks: [],
   goals: [],
   currentView: 'this-week',
@@ -382,6 +388,13 @@ function renderTasks() {
   }
 
   if (!goalsRendered && tasks.length === 0) {
+    const area = state.areas.find(a => a.id === state.currentView);
+    const emptyText = state.currentView === 'this-week'
+      ? 'Nothing planned for this week.'
+      : area
+        ? `No tasks in ${area.name} yet.`
+        : 'Nothing here yet.';
+    document.getElementById('empty-state-text').textContent = emptyText;
     emptyState.classList.remove('hidden');
   } else {
     emptyState.classList.add('hidden');
@@ -576,10 +589,15 @@ function openAddGoal() {
   if (isMobile()) {
     document.getElementById('goal-area-select-group').classList.add('hidden');
     document.getElementById('goal-area-pills-group').classList.remove('hidden');
+    document.getElementById('goal-target-input-group').classList.add('hidden');
+    document.getElementById('goal-target-counter-group').classList.remove('hidden');
+    document.getElementById('goal-target-display').textContent = '1';
     populateAreaPills('goal-area-pills', defaultAreaId);
   } else {
     document.getElementById('goal-area-select-group').classList.remove('hidden');
     document.getElementById('goal-area-pills-group').classList.add('hidden');
+    document.getElementById('goal-target-input-group').classList.remove('hidden');
+    document.getElementById('goal-target-counter-group').classList.add('hidden');
     populateAreaSelect('goal-area-select', defaultAreaId);
   }
 
@@ -606,7 +624,9 @@ function closeGoalModal() {
 
 function saveGoal() {
   const title  = document.getElementById('goal-title-input').value.trim();
-  const target = parseInt(document.getElementById('goal-target-input').value, 10);
+  const target = isMobile()
+    ? parseInt(document.getElementById('goal-target-display').textContent, 10)
+    : parseInt(document.getElementById('goal-target-input').value, 10);
   if (!title) { document.getElementById('goal-title-input').focus(); return; }
   if (!target || target < 1) { document.getElementById('goal-target-input').focus(); return; }
   const areaId = isMobile() ? getSelectedAreaPill('goal-area-pills') : document.getElementById('goal-area-select').value;
@@ -1414,6 +1434,17 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('goal-target-input').addEventListener('keydown', e => {
     if (e.key === 'Enter') saveGoal();
     if (e.key === 'Escape') closeGoalModal();
+  });
+
+  // Mobile: goal target counter
+  document.getElementById('goal-target-increment').addEventListener('click', () => {
+    const display = document.getElementById('goal-target-display');
+    display.textContent = parseInt(display.textContent) + 1;
+  });
+  document.getElementById('goal-target-decrement').addEventListener('click', () => {
+    const display = document.getElementById('goal-target-display');
+    const val = parseInt(display.textContent);
+    if (val > 1) display.textContent = val - 1;
   });
 
   // Mobile: This Week toggle
