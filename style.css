@@ -265,6 +265,9 @@ body {
   font-weight: 500;
   color: var(--text-primary);
   margin-bottom: 5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .task-desc {
@@ -475,6 +478,9 @@ body {
   font-size: 15px;
   font-weight: 500;
   color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .goal-card.goal-done .goal-icon,
