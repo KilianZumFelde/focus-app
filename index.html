@@ -176,6 +176,29 @@
     </div>
   </div>
 
+  <!-- Weekly Review Modal -->
+  <div id="weekly-review-modal" class="modal hidden">
+    <div class="modal-overlay" id="weekly-review-overlay"></div>
+    <div class="modal-content modal-small">
+      <h3>New week, new start.</h3>
+      <div class="weekly-review-stats">
+        <div class="weekly-review-stat-row">
+          <span class="weekly-review-label">Goals accomplished</span>
+          <span class="weekly-review-value" id="weekly-goals-stat">0 / 0</span>
+        </div>
+        <div class="weekly-review-stat-row">
+          <span class="weekly-review-label">Tasks completed</span>
+          <span class="weekly-review-value" id="weekly-tasks-stat">0 / 0</span>
+        </div>
+      </div>
+      <p class="weekly-review-question" id="weekly-review-question">Keep unfinished tasks in This Week?</p>
+      <div class="modal-actions">
+        <button class="btn-secondary" id="weekly-review-remove">Remove from week</button>
+        <button class="btn-primary" id="weekly-review-keep">Keep</button>
+      </div>
+    </div>
+  </div>
+
   <script src="app.js"></script>
 </body>
 </html>

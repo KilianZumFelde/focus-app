@@ -1,3 +1,6 @@
+// ─── Debug flags ─────────────────────────────────────────────────────────────
+const DEBUG_WEEKLY_REVIEW = false; // set true to force weekly review modal on every load
+
 // ─── Color generation for areas ──────────────────────────────────────────────
 // Spreads hues evenly around the color wheel using a golden angle offset
 // so consecutive areas are always maximally distinct.
@@ -33,6 +36,8 @@ const DEFAULT_STATE = {
 
 let state = JSON.parse(JSON.stringify(DEFAULT_STATE));
 
+let pendingWeeklyStats = null;
+
 function loadState() {
   try {
     const saved = localStorage.getItem('focus-app-v1');
@@ -43,7 +48,7 @@ function loadState() {
   } catch (e) {
     state = JSON.parse(JSON.stringify(DEFAULT_STATE));
   }
-  resetGoalsIfNewWeek();
+  pendingWeeklyStats = resetGoalsIfNewWeek();
 }
 
 function saveState() {
@@ -67,14 +72,48 @@ function getCurrentWeekKey() {
 function resetGoalsIfNewWeek() {
   const weekKey = getCurrentWeekKey();
   let changed = false;
-  state.goals.forEach(goal => {
-    if (goal.lastResetWeek !== weekKey) {
-      goal.count = 0;
-      goal.lastResetWeek = weekKey;
-      changed = true;
+  let stats = null;
+
+  const needsReset = state.goals.some(g => g.lastResetWeek !== weekKey);
+  const alreadyShown = localStorage.getItem('focus-weekly-review-shown') === weekKey;
+
+  if (needsReset || DEBUG_WEEKLY_REVIEW) {
+    // Capture last week's stats before resetting
+    const totalGoals = state.goals.length;
+    const accomplishedGoals = state.goals.filter(g => g.count >= g.target).length;
+    const thisWeekTasks = state.tasks.filter(t => t.thisWeek && !t.done);
+    const thisWeekTasksDone = state.tasks.filter(t => t.thisWeek && t.done).length;
+    const thisWeekTasksTotal = thisWeekTasks.length + thisWeekTasksDone;
+    const incompleteThisWeekIds = thisWeekTasks.map(t => t.id);
+
+    const hasSomethingToShow = totalGoals > 0 || thisWeekTasksTotal > 0;
+
+    if (hasSomethingToShow && (!alreadyShown || DEBUG_WEEKLY_REVIEW)) {
+      stats = {
+        accomplishedGoals,
+        totalGoals,
+        thisWeekTasksDone,
+        thisWeekTasksTotal,
+        incompleteThisWeekIds,
+      };
     }
-  });
+
+    // Reset goals
+    state.goals.forEach(goal => {
+      if (goal.lastResetWeek !== weekKey) {
+        goal.count = 0;
+        goal.lastResetWeek = weekKey;
+        changed = true;
+      }
+    });
+
+    if (!DEBUG_WEEKLY_REVIEW) {
+      localStorage.setItem('focus-weekly-review-shown', weekKey);
+    }
+  }
+
   if (changed) saveState();
+  return stats;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -1020,6 +1059,36 @@ function showGoalCounterPopup(card, goal) {
   card.appendChild(popup);
 }
 
+// ─── Weekly review modal ──────────────────────────────────────────────────────
+
+function showWeeklyReviewModal(stats) {
+  document.getElementById('weekly-goals-stat').textContent =
+    `${stats.accomplishedGoals} / ${stats.totalGoals}`;
+  document.getElementById('weekly-tasks-stat').textContent =
+    `${stats.thisWeekTasksDone} / ${stats.thisWeekTasksTotal}`;
+
+  const hasIncomplete = stats.incompleteThisWeekIds.length > 0;
+  document.getElementById('weekly-review-remove').classList.toggle('hidden', !hasIncomplete);
+  document.getElementById('weekly-review-question').textContent = hasIncomplete
+    ? 'Keep unfinished tasks in This Week?'
+    : 'Ready for next week?';
+  document.getElementById('weekly-review-keep').textContent = hasIncomplete ? 'Keep' : "Let's go!";
+
+  document.getElementById('weekly-review-modal').classList.remove('hidden');
+}
+
+function closeWeeklyReviewModal() {
+  document.getElementById('weekly-review-modal').classList.add('hidden');
+}
+
+function removeIncompleteFromWeek(ids) {
+  ids.forEach(id => {
+    const task = state.tasks.find(t => t.id === id);
+    if (task) task.thisWeek = false;
+  });
+  commit();
+}
+
 // ─── Export / Import ─────────────────────────────────────────────────────────
 
 function openDataMenu() {
@@ -1265,6 +1334,19 @@ function closeAddActionMenu() {
 document.addEventListener('DOMContentLoaded', () => {
   loadState();
   render();
+
+  // Weekly review modal
+  document.getElementById('weekly-review-keep').addEventListener('click', closeWeeklyReviewModal);
+  document.getElementById('weekly-review-overlay').addEventListener('click', closeWeeklyReviewModal);
+  document.getElementById('weekly-review-remove').addEventListener('click', () => {
+    const ids = pendingWeeklyStats ? pendingWeeklyStats.incompleteThisWeekIds : [];
+    closeWeeklyReviewModal();
+    removeIncompleteFromWeek(ids);
+  });
+
+  if (pendingWeeklyStats) {
+    showWeeklyReviewModal(pendingWeeklyStats);
+  }
 
   // Static sidebar nav
   document.getElementById('nav-this-week').addEventListener('click', () => setView('this-week'));

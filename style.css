@@ -1152,6 +1152,40 @@ input[type="number"]:focus {
   }
 }
 
+/* ─── Weekly review modal ───────────────────────────────────────────────────── */
+.weekly-review-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 24px;
+  padding: 16px;
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+}
+
+.weekly-review-stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.weekly-review-label {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.weekly-review-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.weekly-review-question {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
 /* Hide bottom nav on desktop */
 @media (min-width: 769px) {
   .bottom-nav,
