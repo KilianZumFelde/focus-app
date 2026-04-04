@@ -341,7 +341,7 @@ function renderTasks() {
 
   const goalsRendered = renderGoals(taskList);
 
-  if (goalsRendered && tasks.length > 0) {
+  if (goalsRendered && tasks.length > 0 && !state.areas.find(a => a.id === state.currentView)) {
     const tasksLabel = document.createElement('span');
     tasksLabel.className = 'section-label';
     tasksLabel.textContent = 'TASKS';
@@ -1343,6 +1343,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
       showAreasScreen();
       updateMobileBottomNav('areas');
+      document.getElementById('back-btn').classList.add('hidden');
     }
   });
 
