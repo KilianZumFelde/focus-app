@@ -235,7 +235,7 @@ function getGoalsForView() {
   return [];
 }
 
-function renderGoals(taskList) {
+function renderGoals(taskList, prevProgressWidths = new Map()) {
   const goals = getGoalsForView();
   if (goals.length === 0) return false;
 
@@ -269,7 +269,7 @@ function renderGoals(taskList) {
         <div class="drag-handle"></div>
       </div>
       <div class="habit-progress-bar">
-        <div class="habit-progress-fill" style="width:${Math.round(progress * 100)}%;background:${fillColor}"></div>
+        <div class="habit-progress-fill" style="width:${prevProgressWidths.get(goal.id) ?? `${Math.round(progress * 100)}%`};background:${fillColor}"></div>
       </div>
     `;
 
@@ -277,6 +277,9 @@ function renderGoals(taskList) {
     if (isMobile()) addSwipeLeft(card, () => showGoalDeletePopup(card, goal.id));
     addTouchDragHandlers(card, goal.id, 'goal', card.querySelector('.drag-handle'));
     taskList.appendChild(card);
+    requestAnimationFrame(() => {
+      card.querySelector('.habit-progress-fill').style.width = `${Math.round(progress * 100)}%`;
+    });
   });
 
   return true;
@@ -381,9 +384,15 @@ function renderTasks() {
       : state.tasks.filter(t => !t.done);
   }
 
+  const prevProgressWidths = new Map();
+  taskList.querySelectorAll('.goal-card[data-goal-id]').forEach(card => {
+    const fill = card.querySelector('.habit-progress-fill');
+    if (fill) prevProgressWidths.set(card.dataset.goalId, fill.style.width);
+  });
+
   taskList.innerHTML = '';
 
-  const goalsRendered = renderGoals(taskList);
+  const goalsRendered = renderGoals(taskList, prevProgressWidths);
 
   if (goalsRendered && tasks.length > 0 && !state.areas.find(a => a.id === state.currentView) && state.currentView !== 'all') {
     taskList.appendChild(createSectionLabel('TASKS'));
