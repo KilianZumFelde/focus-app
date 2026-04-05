@@ -297,7 +297,7 @@ function renderTasks() {
     const area = state.areas.find(a => a.id === state.currentView);
     if (area) {
       title = area.name;
-      // On mobile, respect completed toggle
+      // On mobile, respect completed inline view
       if (isMobile() && mobileShowCompleted) {
         tasks = state.tasks.filter(t => t.areaId === area.id && t.done);
       } else {
@@ -308,7 +308,7 @@ function renderTasks() {
     addNewBtn.classList.remove('hidden');
   }
 
-  // Mobile: All Tasks with completed toggle
+  // Mobile: All Tasks with completed inline view
   if (isMobile() && state.currentView === 'all') {
     if (mobileShowCompleted) {
       tasks = state.tasks.filter(t => t.done);
