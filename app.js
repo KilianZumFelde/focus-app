@@ -346,40 +346,43 @@ function updateViewHeader() {
 
 // ─── Render: task list ────────────────────────────────────────────────────────
 
+function getTasksForView() {
+  const view = state.currentView;
+
+  if (view === 'completed') {
+    return { tasks: state.tasks.filter(t => t.done), isDraggable: false };
+  }
+
+  if (view === 'this-week') {
+    return { tasks: state.tasks.filter(t => t.thisWeek && !t.done), isDraggable: true };
+  }
+
+  // mobileShowCompleted is only reachable on area/all views
+  if (mobileShowCompleted) {
+    const area = state.areas.find(a => a.id === view);
+    const tasks = area
+      ? state.tasks.filter(t => t.areaId === view && t.done)
+      : state.tasks.filter(t => t.done);
+    return { tasks, isDraggable: false };
+  }
+
+  if (view === 'all') {
+    return { tasks: state.tasks.filter(t => !t.done), isDraggable: true };
+  }
+
+  const area = state.areas.find(a => a.id === view);
+  if (area) {
+    return { tasks: state.tasks.filter(t => t.areaId === view && !t.done), isDraggable: true };
+  }
+
+  return { tasks: [], isDraggable: false };
+}
+
 function renderTasks() {
   const taskList   = document.getElementById('task-list');
   const emptyState = document.getElementById('empty-state');
 
-  let tasks = [];
-  let isDraggable = false;
-
-  if (state.currentView === 'this-week') {
-    tasks = state.tasks.filter(t => t.thisWeek && !t.done);
-    isDraggable = true;
-  } else if (state.currentView === 'all') {
-    tasks = state.tasks.filter(t => !t.done);
-    isDraggable = true;
-  } else if (state.currentView === 'completed') {
-    tasks = state.tasks.filter(t => t.done);
-  } else {
-    const area = state.areas.find(a => a.id === state.currentView);
-    if (area) {
-      // On mobile, respect completed inline view
-      if (isMobile() && mobileShowCompleted) {
-        tasks = state.tasks.filter(t => t.areaId === area.id && t.done);
-      } else {
-        tasks = state.tasks.filter(t => t.areaId === area.id && !t.done);
-        isDraggable = true;
-      }
-    }
-  }
-
-  // Mobile: All Tasks with completed inline view
-  if (isMobile() && state.currentView === 'all') {
-    tasks = mobileShowCompleted
-      ? state.tasks.filter(t => t.done)
-      : state.tasks.filter(t => !t.done);
-  }
+  const { tasks, isDraggable } = getTasksForView();
 
   const prevProgressWidths = new Map();
   taskList.querySelectorAll('.habit-card[data-habit-id]').forEach(card => {
