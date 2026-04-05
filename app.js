@@ -44,7 +44,7 @@ const DEFAULT_STATE = {
 
 let state = JSON.parse(JSON.stringify(DEFAULT_STATE));
 
-let pendingWeeklyStats = null;
+let weeklyReviewStats = null;
 
 function loadState() {
   try {
@@ -56,7 +56,7 @@ function loadState() {
   } catch (e) {
     state = JSON.parse(JSON.stringify(DEFAULT_STATE));
   }
-  pendingWeeklyStats = resetGoalsIfNewWeek();
+  weeklyReviewStats = resetGoalsIfNewWeek();
 }
 
 function saveState() {
@@ -239,8 +239,7 @@ function renderSidebar() {
 // ─── Render: goals ───────────────────────────────────────────────────────────
 
 function getGoalsForView() {
-  if (state.currentView === 'this-week') return state.goals;
-  if (state.currentView === 'all') return state.goals;
+  if (state.currentView === 'this-week' || state.currentView === 'all') return state.goals;
   if (state.areas.find(a => a.id === state.currentView)) {
     return state.goals.filter(g => g.areaId === state.currentView);
   }
@@ -602,11 +601,11 @@ function deleteGoal(id) {
 
 // ─── New modal ────────────────────────────────────────────────────────────────
 
-let fixedModalAreaId = null;
+let preselectedAreaId = null;
 
-function openNewModal(fixedAreaId = null) {
-  fixedModalAreaId = fixedAreaId;
-  const defaultAreaId = fixedAreaId || getDefaultAreaId();
+function openNewModal(initialAreaId = null) {
+  preselectedAreaId = initialAreaId;
+  const defaultAreaId = initialAreaId || getDefaultAreaId();
   const defaultThisWeek = state.currentView === 'this-week';
 
   document.getElementById('new-title-input').value = '';
@@ -614,7 +613,7 @@ function openNewModal(fixedAreaId = null) {
   document.getElementById('new-target-input').value = '1';
 
   // Area selector
-  if (fixedAreaId) {
+  if (initialAreaId) {
     document.getElementById('new-area-select-group').classList.add('hidden');
     document.getElementById('new-area-pills-group').classList.add('hidden');
   } else if (isMobile()) {
@@ -658,7 +657,7 @@ function getNewToggle() {
 
 function closeNewModal() {
   document.getElementById('new-modal').classList.add('hidden');
-  fixedModalAreaId = null;
+  preselectedAreaId = null;
 }
 
 function saveNew() {
@@ -666,7 +665,7 @@ function saveNew() {
   if (!title) { document.getElementById('new-title-input').focus(); return; }
 
   const isGoal = getNewToggle() === 'habit';
-  const areaId = fixedModalAreaId || (isMobile() ? getSelectedAreaPill('new-area-pills') : document.getElementById('new-area-select').value);
+  const areaId = preselectedAreaId || (isMobile() ? getSelectedAreaPill('new-area-pills') : document.getElementById('new-area-select').value);
 
   if (isGoal) {
     const target = isMobile()
@@ -1009,9 +1008,9 @@ function createInlinePopup(label, confirmText, confirmClass, onConfirm) {
 // ─── Task swipe delete popup ─────────────────────────────────────────────────
 
 function showTaskDeletePopup(card, taskId) {
-  card.querySelector('.goal-delete-popup')?.remove();
+  card.querySelector('.task-delete-popup')?.remove();
   const popup = createInlinePopup('Delete task?', 'Delete', 'popup-confirm-red', () => deleteTask(taskId));
-  popup.className = 'goal-delete-popup';
+  popup.className = 'task-delete-popup';
   card.appendChild(popup);
 }
 
@@ -1335,13 +1334,13 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('weekly-review-keep').addEventListener('click', closeWeeklyReviewModal);
   document.getElementById('weekly-review-overlay').addEventListener('click', closeWeeklyReviewModal);
   document.getElementById('weekly-review-remove').addEventListener('click', () => {
-    const ids = pendingWeeklyStats ? pendingWeeklyStats.incompleteThisWeekIds : [];
+    const ids = weeklyReviewStats ? weeklyReviewStats.incompleteThisWeekIds : [];
     closeWeeklyReviewModal();
     removeIncompleteFromWeek(ids);
   });
 
-  if (pendingWeeklyStats) {
-    showWeeklyReviewModal(pendingWeeklyStats);
+  if (weeklyReviewStats) {
+    showWeeklyReviewModal(weeklyReviewStats);
   }
 
   // Static sidebar nav

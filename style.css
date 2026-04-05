@@ -512,6 +512,7 @@ body {
 
 /* ─── Inline card popups ────────────────────────────────────────────────────── */
 .goal-delete-popup,
+.task-delete-popup,
 .thisweek-popup,
 .area-delete-popup,
 .task-complete-popup,
