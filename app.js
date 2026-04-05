@@ -275,6 +275,7 @@ function renderGoals(taskList, prevProgressWidths = new Map()) {
 
     if (!isDone) addGoalTapPopup(card, goal);
     if (isMobile()) addSwipeLeft(card, () => showGoalDeletePopup(card, goal.id));
+    if (!isMobile()) addDragHandlers(card, goal.id, 'goal');
     addTouchDragHandlers(card, goal.id, 'goal', card.querySelector('.drag-handle'));
     taskList.appendChild(card);
     requestAnimationFrame(() => {
@@ -452,7 +453,7 @@ function renderTasks() {
     }
 
     if (isDraggable && !isCompleted) {
-      if (!isMobile()) addDragHandlers(card, task.id, section);
+      if (!isMobile()) addDragHandlers(card, task.id, 'task', section);
       addTouchDragHandlers(card, task.id, 'task', card.querySelector('.drag-handle'), section);
     }
     taskList.appendChild(card);
@@ -687,19 +688,19 @@ function saveNew() {
 
 // ─── Drag-and-drop reordering ────────────────────────────────────────────────
 
-let draggingTaskId = null;
+let draggingItemId = null;
 
-function addDragHandlers(card, taskId, section = null) {
+function addDragHandlers(card, itemId, type = 'task', section = null) {
   card.setAttribute('draggable', 'true');
 
   card.addEventListener('dragstart', (e) => {
-    draggingTaskId = taskId;
+    draggingItemId = itemId;
     card.classList.add('dragging');
     e.dataTransfer.effectAllowed = 'move';
   });
 
   card.addEventListener('dragend', () => {
-    draggingTaskId = null;
+    draggingItemId = null;
     card.classList.remove('dragging');
     document.querySelectorAll('.drag-over-top, .drag-over-bottom').forEach(el => {
       el.classList.remove('drag-over-top', 'drag-over-bottom');
@@ -708,7 +709,7 @@ function addDragHandlers(card, taskId, section = null) {
 
   card.addEventListener('dragover', (e) => {
     e.preventDefault();
-    if (draggingTaskId === taskId) return;
+    if (draggingItemId === itemId) return;
     if (section && card.dataset.section !== section) return;
     const rect = card.getBoundingClientRect();
     const inTopHalf = e.clientY < rect.top + rect.height / 2;
@@ -728,11 +729,12 @@ function addDragHandlers(card, taskId, section = null) {
 
   card.addEventListener('drop', (e) => {
     e.preventDefault();
-    if (!draggingTaskId || draggingTaskId === taskId) return;
+    if (!draggingItemId || draggingItemId === itemId) return;
     if (section && card.dataset.section !== section) return;
     const insertBefore = card.classList.contains('drag-over-top');
     card.classList.remove('drag-over-top', 'drag-over-bottom');
-    reorderTask(draggingTaskId, taskId, insertBefore);
+    if (type === 'goal') reorderGoal(draggingItemId, itemId, insertBefore);
+    else reorderTask(draggingItemId, itemId, insertBefore);
   });
 }
 

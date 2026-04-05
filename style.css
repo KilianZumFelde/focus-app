@@ -485,10 +485,13 @@ body {
 }
 
 .drag-handle::after {
-  content: '⋮⋮';
-  font-size: 13px;
-  color: var(--text-muted);
-  letter-spacing: -4px;
+  content: '';
+  display: block;
+  width: 18px;
+  height: 2.5px;
+  background: var(--text-muted);
+  border-radius: 2px;
+  box-shadow: 0 -6px 0 var(--text-muted), 0 6px 0 var(--text-muted);
 }
 
 /* ─── Card tap cursor ───────────────────────────────────────────────────────── */
