@@ -732,24 +732,22 @@ function addDragHandlers(card, taskId, section = null) {
   });
 }
 
-function reorderTask(fromId, toId, insertBefore) {
-  const fromIdx = state.tasks.findIndex(t => t.id === fromId);
+function reorderItem(array, fromId, toId, insertBefore) {
+  const fromIdx = array.findIndex(item => item.id === fromId);
   if (fromIdx === -1) return;
-  const [moved] = state.tasks.splice(fromIdx, 1);
-  const toIdx = state.tasks.findIndex(t => t.id === toId);
-  if (toIdx === -1) { state.tasks.push(moved); return; }
-  state.tasks.splice(insertBefore ? toIdx : toIdx + 1, 0, moved);
+  const [moved] = array.splice(fromIdx, 1);
+  const toIdx = array.findIndex(item => item.id === toId);
+  if (toIdx === -1) { array.push(moved); return; }
+  array.splice(insertBefore ? toIdx : toIdx + 1, 0, moved);
   commit();
 }
 
+function reorderTask(fromId, toId, insertBefore) {
+  reorderItem(state.tasks, fromId, toId, insertBefore);
+}
+
 function reorderGoal(fromId, toId, insertBefore) {
-  const fromIdx = state.goals.findIndex(g => g.id === fromId);
-  if (fromIdx === -1) return;
-  const [moved] = state.goals.splice(fromIdx, 1);
-  const toIdx = state.goals.findIndex(g => g.id === toId);
-  if (toIdx === -1) { state.goals.push(moved); return; }
-  state.goals.splice(insertBefore ? toIdx : toIdx + 1, 0, moved);
-  commit();
+  reorderItem(state.goals, fromId, toId, insertBefore);
 }
 
 // ─── Touch drag-and-drop ──────────────────────────────────────────────────────
