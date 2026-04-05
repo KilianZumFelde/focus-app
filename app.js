@@ -175,8 +175,11 @@ function commit() {
 
 // ─── Navigation ───────────────────────────────────────────────────────────────
 
-function setView(view) {
+function navigateTo(view) {
+  mobileShowCompleted = false;
   state.currentView = view;
+  updateMobileBottomNav(view);
+  updateBackBtn(view);
   render();
 }
 
@@ -206,7 +209,7 @@ function renderSidebar() {
 
     btn.addEventListener('click', (e) => {
       if (e.target.closest('.area-delete-btn')) return;
-      setView(area.id);
+      navigateTo(area.id);
     });
 
     areasList.appendChild(btn);
@@ -1257,7 +1260,7 @@ function renderAreasScreen() {
       card.classList.add('area-card-tapped');
       setTimeout(() => {
         hideAreasScreen();
-        setMobileView(area.id);
+        navigateTo(area.id);
       }, 80);
     });
 
@@ -1273,14 +1276,6 @@ function renderAreasScreen() {
   addBtn.addEventListener('click', openAddArea);
   list.appendChild(addBtn);
 
-}
-
-function setMobileView(view) {
-  mobileShowCompleted = false;
-  state.currentView = view;
-  updateMobileBottomNav(view);
-  updateBackBtn(view);
-  render();
 }
 
 function updateMobileBottomNav(view) {
@@ -1321,9 +1316,9 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Static sidebar nav
-  document.getElementById('nav-this-week').addEventListener('click', () => setView('this-week'));
-  document.getElementById('nav-all').addEventListener('click',       () => setView('all'));
-  document.getElementById('nav-completed').addEventListener('click', () => setView('completed'));
+  document.getElementById('nav-this-week').addEventListener('click', () => navigateTo('this-week'));
+  document.getElementById('nav-all').addEventListener('click',       () => navigateTo('all'));
+  document.getElementById('nav-completed').addEventListener('click', () => navigateTo('completed'));
 
   // Add new / area
   document.getElementById('add-new-btn').addEventListener('click', () => openNewModal());
@@ -1361,11 +1356,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // Mobile: bottom nav
   document.getElementById('mobile-nav-this-week').addEventListener('click', () => {
     hideAreasScreen();
-    setMobileView('this-week');
+    navigateTo('this-week');
   });
   document.getElementById('mobile-all-tasks').addEventListener('click', () => {
     hideAreasScreen();
-    setMobileView('all');
+    navigateTo('all');
   });
 
   document.getElementById('mobile-nav-areas').addEventListener('click', () => {
