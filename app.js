@@ -255,9 +255,7 @@ function renderGoals(taskList) {
     card.dataset.goalId = goal.id;
 
     const progress = goal.target > 0 ? Math.min(goal.count / goal.target, 1) : 0;
-    const fillColor = area ? area.color.replace(/^hsl\((.+)\)$/, 'hsla($1, 0.2)') : 'transparent';
-    card.style.setProperty('--goal-progress', `${Math.round(progress * 100)}%`);
-    card.style.setProperty('--goal-fill-color', fillColor);
+    const fillColor = isDone ? '#3faa6e' : (area ? area.color.replace(/^hsl\((.+)\)$/, 'hsla($1, 0.8)') : 'transparent');
 
     card.innerHTML = `
       <div class="goal-card-main">
@@ -269,6 +267,9 @@ function renderGoals(taskList) {
         </div>
         <span class="counter-display${isDone ? ' counter-done' : ''}">${isDone ? '✓ ' : ''}${goal.count} / ${goal.target}</span>
         <div class="drag-handle"></div>
+      </div>
+      <div class="habit-progress-bar">
+        <div class="habit-progress-fill" style="width:${Math.round(progress * 100)}%;background:${fillColor}"></div>
       </div>
     `;
 
