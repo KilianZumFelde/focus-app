@@ -61,8 +61,7 @@
           <h2 id="view-title">This Week</h2>
         </div>
         <div class="header-actions">
-          <button class="btn-secondary" id="add-goal-btn">↻ New goal</button>
-          <button class="btn-primary" id="add-task-btn">+ New task</button>
+          <button class="btn-primary" id="add-new-btn">+ New</button>
         </div>
       </div>
 
@@ -100,8 +99,7 @@
 
   <!-- Mobile: + action menu -->
   <div class="add-action-menu hidden" id="add-action-menu">
-    <button class="add-action-item" id="mobile-add-goal">↻ New goal</button>
-    <button class="add-action-item" id="mobile-add-task">+ New task</button>
+    <button class="add-action-item" id="mobile-add-new">+ New</button>
   </div>
   <div class="add-action-overlay hidden" id="add-action-overlay"></div>
 
@@ -113,80 +111,62 @@
   <div class="data-menu-overlay hidden" id="data-menu-overlay"></div>
   <input type="file" id="import-file-input" accept=".json" style="display:none">
 
-  <!-- Task Modal (Add / Edit) -->
-  <div id="task-modal" class="modal hidden">
-    <div class="modal-overlay" id="task-modal-overlay"></div>
+  <!-- New Modal (Task or Goal) -->
+  <div id="new-modal" class="modal hidden">
+    <div class="modal-overlay" id="new-modal-overlay"></div>
     <div class="modal-content">
-      <h3 id="modal-title">New task</h3>
+      <!-- Task / Goal toggle -->
       <div class="form-group">
-        <input type="text" id="task-title-input" placeholder="Task title" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+        <div class="week-toggle">
+          <button class="week-toggle-option selected" id="new-type-task">Task</button>
+          <button class="week-toggle-option" id="new-type-goal">Goal</button>
+        </div>
       </div>
-      <!-- Desktop: dropdown -->
-      <div class="form-group" id="task-area-select-group">
-        <label for="task-area-select">Area</label>
-        <select id="task-area-select"></select>
+      <!-- Title -->
+      <div class="form-group">
+        <input type="text" id="new-title-input" placeholder="What needs to get done?" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
       </div>
-      <!-- Mobile: pills -->
-      <div class="form-group hidden" id="task-area-pills-group">
+      <!-- Desktop: area dropdown -->
+      <div class="form-group" id="new-area-select-group">
+        <label for="new-area-select">Area</label>
+        <select id="new-area-select"></select>
+      </div>
+      <!-- Mobile: area pills -->
+      <div class="form-group hidden" id="new-area-pills-group">
         <label>Area</label>
-        <div class="area-pills-scroll" id="task-area-pills"></div>
+        <div class="area-pills-scroll" id="new-area-pills"></div>
       </div>
-      <!-- Desktop: checkbox -->
-      <div class="form-group checkbox-group" id="task-thisweek-check-group">
+      <!-- This Week toggle (task only) -->
+      <div class="form-group hidden" id="new-thisweek-toggle-group">
+        <div class="week-toggle">
+          <button class="week-toggle-option selected" id="new-toggle-this-week">This Week</button>
+          <button class="week-toggle-option" id="new-toggle-later">Later</button>
+        </div>
+      </div>
+      <!-- Desktop: This Week checkbox (task only) -->
+      <div class="form-group checkbox-group" id="new-thisweek-check-group">
         <label>
-          <input type="checkbox" id="task-thisweek-check" />
+          <input type="checkbox" id="new-thisweek-check" />
           Add to This Week
         </label>
       </div>
-      <!-- Mobile: toggle -->
-      <div class="form-group hidden" id="task-thisweek-toggle-group">
-        <div class="week-toggle">
-          <button class="week-toggle-option selected" id="toggle-this-week">This Week</button>
-          <button class="week-toggle-option" id="toggle-later">Later</button>
-        </div>
+      <!-- Weekly target: desktop number input (goal only) -->
+      <div class="form-group hidden" id="new-target-input-group">
+        <label for="new-target-input">Weekly target</label>
+        <input type="text" inputmode="numeric" id="new-target-input" min="1" value="1" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
       </div>
-      <div class="modal-actions">
-        <button class="btn-secondary" id="modal-cancel">Cancel</button>
-        <button class="btn-primary" id="modal-save">Save</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Goal Modal (Add / Edit) -->
-  <div id="goal-modal" class="modal hidden">
-    <div class="modal-overlay" id="goal-modal-overlay"></div>
-    <div class="modal-content modal-small">
-      <h3 id="goal-modal-title">New goal</h3>
-      <div class="form-group">
-        <input type="text" id="goal-title-input" placeholder="Goal title" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
-      </div>
-      <!-- Desktop: dropdown -->
-      <div class="form-group" id="goal-area-select-group">
-        <label for="goal-area-select">Area</label>
-        <select id="goal-area-select"></select>
-      </div>
-      <!-- Mobile: pills -->
-      <div class="form-group hidden" id="goal-area-pills-group">
-        <label>Area</label>
-        <div class="area-pills-scroll" id="goal-area-pills"></div>
-      </div>
-      <!-- Desktop: number input -->
-      <div class="form-group" id="goal-target-input-group">
-        <label for="goal-target-input">Weekly target</label>
-        <input type="text" inputmode="numeric" id="goal-target-input" min="1" value="1" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
-      </div>
-      <!-- Mobile: +/- counter -->
-      <div class="form-group hidden" id="goal-target-counter-group">
+      <!-- Weekly target: mobile counter (goal only) -->
+      <div class="form-group hidden" id="new-target-counter-group">
         <label>Weekly target</label>
         <div class="goal-target-counter">
-          <button class="counter-btn" id="goal-target-decrement">−</button>
-          <span class="counter-display" id="goal-target-display">1</span>
-          <button class="counter-btn" id="goal-target-increment">+</button>
+          <button class="counter-btn" id="new-target-decrement">−</button>
+          <span class="counter-display" id="new-target-display">1</span>
+          <button class="counter-btn" id="new-target-increment">+</button>
         </div>
       </div>
       <div class="modal-actions">
-        <button class="btn-secondary" id="goal-modal-cancel">Cancel</button>
-        <button class="btn-primary" id="goal-modal-save">Save</button>
+        <button class="btn-secondary" id="new-modal-cancel">Cancel</button>
+        <button class="btn-primary" id="new-modal-save">Save</button>
       </div>
     </div>
   </div>

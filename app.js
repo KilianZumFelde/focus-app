@@ -276,8 +276,7 @@ function renderTasks() {
   const taskList    = document.getElementById('task-list');
   const emptyState  = document.getElementById('empty-state');
   const viewTitle   = document.getElementById('view-title');
-  const addTaskBtn  = document.getElementById('add-task-btn');
-  const addGoalBtn  = document.getElementById('add-goal-btn');
+  const addNewBtn   = document.getElementById('add-new-btn');
 
   let tasks = [];
   let title = '';
@@ -287,19 +286,16 @@ function renderTasks() {
     title = 'This Week';
     tasks = state.tasks.filter(t => t.thisWeek && !t.done);
     isDraggable = true;
-    addTaskBtn.classList.remove('hidden');
-    addGoalBtn.classList.remove('hidden');
+    addNewBtn.classList.remove('hidden');
   } else if (state.currentView === 'all') {
     title = 'All Tasks';
     tasks = state.tasks.filter(t => !t.done);
     isDraggable = true;
-    addTaskBtn.classList.remove('hidden');
-    addGoalBtn.classList.add('hidden');
+    addNewBtn.classList.remove('hidden');
   } else if (state.currentView === 'completed') {
     title = 'Completed';
     tasks = state.tasks.filter(t => t.done);
-    addTaskBtn.classList.add('hidden');
-    addGoalBtn.classList.add('hidden');
+    addNewBtn.classList.add('hidden');
   } else {
     const area = state.areas.find(a => a.id === state.currentView);
     if (area) {
@@ -312,8 +308,7 @@ function renderTasks() {
         isDraggable = true;
       }
     }
-    addTaskBtn.classList.remove('hidden');
-    addGoalBtn.classList.remove('hidden');
+    addNewBtn.classList.remove('hidden');
   }
 
   // Mobile: All Tasks with completed toggle
@@ -462,18 +457,6 @@ function renderTasks() {
       otherTasks.forEach(t => appendTaskCard(t, 'other'));
     }
 
-    // Add task / add goal buttons at the bottom
-    const addTaskBtn = document.createElement('button');
-    addTaskBtn.className = 'add-card';
-    addTaskBtn.textContent = '+ New task';
-    addTaskBtn.addEventListener('click', () => openAddTask(state.currentView));
-    taskList.appendChild(addTaskBtn);
-
-    const addGoalBtn = document.createElement('button');
-    addGoalBtn.className = 'add-card';
-    addGoalBtn.textContent = '+ New goal';
-    addGoalBtn.addEventListener('click', () => openAddGoal(state.currentView));
-    taskList.appendChild(addGoalBtn);
   } else {
     tasks.forEach(t => appendTaskCard(t, null));
   }
@@ -587,80 +570,91 @@ function deleteGoal(id) {
   commit();
 }
 
-// ─── Goal modal ───────────────────────────────────────────────────────────────
+// ─── New modal (unified task + goal) ─────────────────────────────────────────
 
-let editingGoalId = null;
-let fixedGoalAreaId = null;
+let fixedModalAreaId = null;
 
-
-function openAddGoal(fixedAreaId = null) {
-  editingGoalId = null;
-  fixedGoalAreaId = fixedAreaId;
+function openNewModal(fixedAreaId = null) {
+  fixedModalAreaId = fixedAreaId;
   const defaultAreaId = fixedAreaId || getDefaultAreaId();
-  document.getElementById('goal-modal-title').textContent = 'New goal';
-  document.getElementById('goal-title-input').value = '';
-  document.getElementById('goal-target-input').value = '1';
+  const defaultThisWeek = state.currentView === 'this-week';
 
-  if (isMobile()) {
-    document.getElementById('goal-target-input-group').classList.add('hidden');
-    document.getElementById('goal-target-counter-group').classList.remove('hidden');
-    document.getElementById('goal-target-display').textContent = '1';
-    if (fixedAreaId) {
-      document.getElementById('goal-area-select-group').classList.add('hidden');
-      document.getElementById('goal-area-pills-group').classList.add('hidden');
-    } else {
-      document.getElementById('goal-area-select-group').classList.add('hidden');
-      document.getElementById('goal-area-pills-group').classList.remove('hidden');
-      populateAreaPills('goal-area-pills', defaultAreaId);
-    }
+  document.getElementById('new-title-input').value = '';
+  setNewModalType('task');
+
+  // Area selector
+  if (fixedAreaId) {
+    document.getElementById('new-area-select-group').classList.add('hidden');
+    document.getElementById('new-area-pills-group').classList.add('hidden');
+  } else if (isMobile()) {
+    document.getElementById('new-area-select-group').classList.add('hidden');
+    document.getElementById('new-area-pills-group').classList.remove('hidden');
+    populateAreaPills('new-area-pills', defaultAreaId);
   } else {
-    document.getElementById('goal-target-input-group').classList.remove('hidden');
-    document.getElementById('goal-target-counter-group').classList.add('hidden');
-    if (fixedAreaId) {
-      document.getElementById('goal-area-select-group').classList.add('hidden');
-      document.getElementById('goal-area-pills-group').classList.add('hidden');
-    } else {
-      document.getElementById('goal-area-select-group').classList.remove('hidden');
-      document.getElementById('goal-area-pills-group').classList.add('hidden');
-      populateAreaSelect('goal-area-select', defaultAreaId);
-    }
+    document.getElementById('new-area-select-group').classList.remove('hidden');
+    document.getElementById('new-area-pills-group').classList.add('hidden');
+    populateAreaSelect('new-area-select', defaultAreaId);
   }
 
-  document.getElementById('goal-modal').classList.remove('hidden');
-  document.getElementById('goal-title-input').focus();
-}
-
-function openEditGoal(id) {
-  const goal = state.goals.find(g => g.id === id);
-  if (!goal) return;
-  editingGoalId = id;
-  document.getElementById('goal-modal-title').textContent = 'Edit goal';
-  document.getElementById('goal-title-input').value = goal.title;
-  document.getElementById('goal-target-input').value = goal.target;
-  populateAreaSelect('goal-area-select', goal.areaId);
-  document.getElementById('goal-modal').classList.remove('hidden');
-  document.getElementById('goal-title-input').focus();
-}
-
-function closeGoalModal() {
-  document.getElementById('goal-modal').classList.add('hidden');
-  editingGoalId = null;
-  fixedGoalAreaId = null;
-}
-
-function saveGoal() {
-  const title  = document.getElementById('goal-title-input').value.trim();
-  const target = isMobile()
-    ? parseInt(document.getElementById('goal-target-display').textContent, 10)
-    : parseInt(document.getElementById('goal-target-input').value, 10);
-  if (!title) { document.getElementById('goal-title-input').focus(); return; }
-  if (!target || target < 1) { document.getElementById('goal-target-input').focus(); return; }
-  const areaId = fixedGoalAreaId || (isMobile() ? getSelectedAreaPill('goal-area-pills') : document.getElementById('goal-area-select').value);
-
-  if (editingGoalId) {
-    const goal = state.goals.find(g => g.id === editingGoalId);
-    if (goal) { goal.title = title; goal.target = target; goal.areaId = areaId; }
+  // This Week default
+  if (isMobile()) {
+    document.getElementById('new-toggle-this-week').classList.toggle('selected', defaultThisWeek);
+    document.getElementById('new-toggle-later').classList.toggle('selected', !defaultThisWeek);
+    document.getElementById('new-thisweek-check-group').classList.add('hidden');
   } else {
+    document.getElementById('new-thisweek-check').checked = defaultThisWeek;
+    document.getElementById('new-thisweek-toggle-group').classList.add('hidden');
+  }
+
+  document.getElementById('new-target-display').textContent = '1';
+  document.getElementById('new-target-input').value = '1';
+
+  document.getElementById('new-modal').classList.remove('hidden');
+  document.getElementById('new-title-input').focus();
+}
+
+function setNewModalType(type) {
+  const isTask = type === 'task';
+
+  document.getElementById('new-type-task').classList.toggle('selected', isTask);
+  document.getElementById('new-type-goal').classList.toggle('selected', !isTask);
+
+  // This Week toggle — task only
+  if (isMobile()) {
+    document.getElementById('new-thisweek-toggle-group').classList.toggle('hidden', !isTask);
+    document.getElementById('new-thisweek-check-group').classList.add('hidden');
+  } else {
+    document.getElementById('new-thisweek-check-group').classList.toggle('hidden', !isTask);
+    document.getElementById('new-thisweek-toggle-group').classList.add('hidden');
+  }
+
+  // Weekly target — goal only
+  if (isMobile()) {
+    document.getElementById('new-target-counter-group').classList.toggle('hidden', isTask);
+    document.getElementById('new-target-input-group').classList.add('hidden');
+  } else {
+    document.getElementById('new-target-input-group').classList.toggle('hidden', isTask);
+    document.getElementById('new-target-counter-group').classList.add('hidden');
+  }
+}
+
+function closeNewModal() {
+  document.getElementById('new-modal').classList.add('hidden');
+  fixedModalAreaId = null;
+}
+
+function saveNew() {
+  const title = document.getElementById('new-title-input').value.trim();
+  if (!title) { document.getElementById('new-title-input').focus(); return; }
+
+  const isGoal = document.getElementById('new-type-goal').classList.contains('selected');
+  const areaId = fixedModalAreaId || (isMobile() ? getSelectedAreaPill('new-area-pills') : document.getElementById('new-area-select').value);
+
+  if (isGoal) {
+    const target = isMobile()
+      ? parseInt(document.getElementById('new-target-display').textContent, 10)
+      : parseInt(document.getElementById('new-target-input').value, 10);
+    if (!target || target < 1) return;
     state.goals.push({
       id: generateId(),
       title,
@@ -669,9 +663,22 @@ function saveGoal() {
       count: 0,
       lastResetWeek: getCurrentWeekKey(),
     });
+  } else {
+    const thisWeek = isMobile()
+      ? document.getElementById('new-toggle-this-week').classList.contains('selected')
+      : document.getElementById('new-thisweek-check').checked;
+    state.tasks.push({
+      id:          generateId(),
+      title,
+      areaId,
+      thisWeek,
+      done:        false,
+      createdAt:   new Date().toISOString(),
+      completedAt: null,
+    });
   }
 
-  closeGoalModal();
+  closeNewModal();
   commit();
 }
 
@@ -848,10 +855,7 @@ function addTouchDragHandlers(card, itemId, type, handle, section = null) {
   card.addEventListener('touchcancel', cleanup);
 }
 
-// ─── Task modal ───────────────────────────────────────────────────────────────
-
-let editingTaskId = null;
-let fixedTaskAreaId = null;
+// ─── Area selector helpers ────────────────────────────────────────────────────
 
 function populateAreaSelect(selectId, selectedAreaId) {
   const select = document.getElementById(selectId);
@@ -946,87 +950,6 @@ function addSwipeLeft(card, onSwipe) {
   });
 }
 
-function openAddTask(fixedAreaId = null) {
-  editingTaskId = null;
-  fixedTaskAreaId = fixedAreaId;
-  const defaultAreaId = fixedAreaId || getDefaultAreaId();
-  const defaultThisWeek = state.currentView === 'this-week';
-
-  document.getElementById('modal-title').textContent = 'New task';
-  document.getElementById('task-title-input').value = '';
-
-  if (isMobile()) {
-    document.getElementById('task-thisweek-check-group').classList.add('hidden');
-    document.getElementById('task-thisweek-toggle-group').classList.remove('hidden');
-    document.getElementById('toggle-this-week').classList.toggle('selected', defaultThisWeek);
-    document.getElementById('toggle-later').classList.toggle('selected', !defaultThisWeek);
-    if (fixedAreaId) {
-      document.getElementById('task-area-select-group').classList.add('hidden');
-      document.getElementById('task-area-pills-group').classList.add('hidden');
-    } else {
-      document.getElementById('task-area-select-group').classList.add('hidden');
-      document.getElementById('task-area-pills-group').classList.remove('hidden');
-      populateAreaPills('task-area-pills', defaultAreaId);
-    }
-  } else {
-    document.getElementById('task-thisweek-check-group').classList.remove('hidden');
-    document.getElementById('task-thisweek-toggle-group').classList.add('hidden');
-    document.getElementById('task-thisweek-check').checked = defaultThisWeek;
-    if (fixedAreaId) {
-      document.getElementById('task-area-select-group').classList.add('hidden');
-      document.getElementById('task-area-pills-group').classList.add('hidden');
-    } else {
-      document.getElementById('task-area-select-group').classList.remove('hidden');
-      document.getElementById('task-area-pills-group').classList.add('hidden');
-      populateAreaSelect('task-area-select', defaultAreaId);
-    }
-  }
-
-  document.getElementById('task-modal').classList.remove('hidden');
-  document.getElementById('task-title-input').focus();
-}
-
-
-function closeTaskModal() {
-  document.getElementById('task-modal').classList.add('hidden');
-  editingTaskId = null;
-  fixedTaskAreaId = null;
-}
-
-function saveTask() {
-  const title = document.getElementById('task-title-input').value.trim();
-  if (!title) {
-    document.getElementById('task-title-input').focus();
-    return;
-  }
-
-  const areaId   = fixedTaskAreaId || (isMobile() ? getSelectedAreaPill('task-area-pills') : document.getElementById('task-area-select').value);
-  const thisWeek = isMobile()
-    ? document.getElementById('toggle-this-week').classList.contains('selected')
-    : document.getElementById('task-thisweek-check').checked;
-
-  if (editingTaskId) {
-    const task = state.tasks.find(t => t.id === editingTaskId);
-    if (task) {
-      task.title    = title;
-      task.areaId   = areaId;
-      task.thisWeek = thisWeek;
-    }
-  } else {
-    state.tasks.push({
-      id:          generateId(),
-      title,
-      areaId,
-      thisWeek,
-      done:        false,
-      createdAt:   new Date().toISOString(),
-      completedAt: null,
-    });
-  }
-
-  closeTaskModal();
-  commit();
-}
 
 // ─── Goal long-press delete popup ────────────────────────────────────────────
 
@@ -1485,52 +1408,36 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('nav-all').addEventListener('click',       () => setView('all'));
   document.getElementById('nav-completed').addEventListener('click', () => setView('completed'));
 
-  // Add task / area / goal
-  document.getElementById('add-task-btn').addEventListener('click', openAddTask);
+  // Add new / area
+  document.getElementById('add-new-btn').addEventListener('click', () => openNewModal());
   document.getElementById('add-area-btn').addEventListener('click', openAddArea);
-  document.getElementById('add-goal-btn').addEventListener('click', openAddGoal);
 
-  // Goal modal
-  document.getElementById('goal-modal-cancel').addEventListener('click', closeGoalModal);
-  document.getElementById('goal-modal-save').addEventListener('click', saveGoal);
-  document.getElementById('goal-modal-overlay').addEventListener('click', closeGoalModal);
-  document.getElementById('goal-title-input').addEventListener('keydown', e => {
-    if (e.key === 'Enter') saveGoal();
-    if (e.key === 'Escape') closeGoalModal();
+  // New modal (unified task + goal)
+  document.getElementById('new-modal-cancel').addEventListener('click', closeNewModal);
+  document.getElementById('new-modal-save').addEventListener('click', saveNew);
+  document.getElementById('new-modal-overlay').addEventListener('click', closeNewModal);
+  document.getElementById('new-title-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') saveNew();
+    if (e.key === 'Escape') closeNewModal();
   });
-  document.getElementById('goal-target-input').addEventListener('keydown', e => {
-    if (e.key === 'Enter') saveGoal();
-    if (e.key === 'Escape') closeGoalModal();
+  document.getElementById('new-type-task').addEventListener('click', () => setNewModalType('task'));
+  document.getElementById('new-type-goal').addEventListener('click', () => setNewModalType('goal'));
+  document.getElementById('new-toggle-this-week').addEventListener('click', () => {
+    document.getElementById('new-toggle-this-week').classList.add('selected');
+    document.getElementById('new-toggle-later').classList.remove('selected');
   });
-
-  // Mobile: goal target counter
-  document.getElementById('goal-target-increment').addEventListener('click', () => {
-    const display = document.getElementById('goal-target-display');
+  document.getElementById('new-toggle-later').addEventListener('click', () => {
+    document.getElementById('new-toggle-later').classList.add('selected');
+    document.getElementById('new-toggle-this-week').classList.remove('selected');
+  });
+  document.getElementById('new-target-increment').addEventListener('click', () => {
+    const display = document.getElementById('new-target-display');
     display.textContent = parseInt(display.textContent) + 1;
   });
-  document.getElementById('goal-target-decrement').addEventListener('click', () => {
-    const display = document.getElementById('goal-target-display');
+  document.getElementById('new-target-decrement').addEventListener('click', () => {
+    const display = document.getElementById('new-target-display');
     const val = parseInt(display.textContent);
     if (val > 1) display.textContent = val - 1;
-  });
-
-  // Mobile: This Week toggle
-  document.getElementById('toggle-this-week').addEventListener('click', () => {
-    document.getElementById('toggle-this-week').classList.add('selected');
-    document.getElementById('toggle-later').classList.remove('selected');
-  });
-  document.getElementById('toggle-later').addEventListener('click', () => {
-    document.getElementById('toggle-later').classList.add('selected');
-    document.getElementById('toggle-this-week').classList.remove('selected');
-  });
-
-  // Task modal
-  document.getElementById('modal-cancel').addEventListener('click', closeTaskModal);
-  document.getElementById('modal-save').addEventListener('click', saveTask);
-  document.getElementById('task-modal-overlay').addEventListener('click', closeTaskModal);
-  document.getElementById('task-title-input').addEventListener('keydown', e => {
-    if (e.key === 'Enter') saveTask();
-    if (e.key === 'Escape') closeTaskModal();
   });
   // Area modal
   document.getElementById('area-modal-cancel').addEventListener('click', closeAreaModal);
@@ -1556,16 +1463,12 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('mobile-nav-areas').classList.add('active');
     document.getElementById('mobile-nav-this-week').classList.remove('active');
   });
-  document.getElementById('mobile-nav-add').addEventListener('click', openAddActionMenu);
+  document.getElementById('mobile-nav-add').addEventListener('click', () => openNewModal());
 
   // Mobile: + action menu
-  document.getElementById('mobile-add-task').addEventListener('click', () => {
+  document.getElementById('mobile-add-new').addEventListener('click', () => {
     closeAddActionMenu();
-    openAddTask();
-  });
-  document.getElementById('mobile-add-goal').addEventListener('click', () => {
-    closeAddActionMenu();
-    openAddGoal();
+    openNewModal();
   });
   document.getElementById('add-action-overlay').addEventListener('click', closeAddActionMenu);
 
