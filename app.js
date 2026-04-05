@@ -4,8 +4,8 @@ const DEBUG_WEEKLY_REVIEW = false; // set true to force weekly review modal on e
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const MOBILE_BREAKPOINT    = 768;         // px — must match @media breakpoint in style.css
-const STORAGE_KEY          = STORAGE_KEY;
-const WEEKLY_REVIEW_KEY    = WEEKLY_REVIEW_KEY;
+const STORAGE_KEY          = 'focus-app-v1';
+const WEEKLY_REVIEW_KEY    = 'focus-weekly-review-shown';
 const LONG_PRESS_DATA_MS   = 800;         // ms — long-press to open data menu
 const LONG_PRESS_WEEK_MS   = 600;         // ms — long-press to toggle This Week
 const COMPLETE_FLASH_MS    = 300;         // ms — green flash phase of task completion animation
