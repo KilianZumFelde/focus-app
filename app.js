@@ -1404,16 +1404,6 @@ function updateBackBtn(view) {
   }
 }
 
-function openAddActionMenu() {
-  document.getElementById('add-action-menu').classList.remove('hidden');
-  document.getElementById('add-action-overlay').classList.remove('hidden');
-}
-
-function closeAddActionMenu() {
-  document.getElementById('add-action-menu').classList.add('hidden');
-  document.getElementById('add-action-overlay').classList.add('hidden');
-}
-
 // ─── Event wiring (runs once on DOMContentLoaded) ─────────────────────────────
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -1487,13 +1477,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('mobile-nav-this-week').classList.remove('active');
   });
   document.getElementById('mobile-nav-add').addEventListener('click', () => openNewModal());
-
-  // Mobile: + action menu
-  document.getElementById('mobile-add-new').addEventListener('click', () => {
-    closeAddActionMenu();
-    openNewModal();
-  });
-  document.getElementById('add-action-overlay').addEventListener('click', closeAddActionMenu);
 
   // Mobile: back button
   document.getElementById('back-btn').addEventListener('click', () => {

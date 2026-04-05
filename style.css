@@ -1118,51 +1118,6 @@ input[type="number"]:focus {
 
   .data-menu-overlay.hidden { display: none; }
 
-  /* ─── + action menu ──────────────────────────────────── */
-  .add-action-menu {
-    position: fixed;
-    bottom: 80px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--surface);
-    border-radius: var(--radius);
-    box-shadow: 0 8px 32px rgba(0,0,0,0.16);
-    overflow: hidden;
-    z-index: 30;
-    min-width: 180px;
-  }
-
-  .add-action-menu.hidden { display: none; }
-
-  .add-action-item {
-    display: block;
-    width: 100%;
-    padding: 16px 20px;
-    background: none;
-    border: none;
-    text-align: left;
-    font-size: 15px;
-    font-weight: 500;
-    color: var(--text-primary);
-    cursor: pointer;
-    font-family: inherit;
-    transition: background 0.12s;
-  }
-
-  .add-action-item + .add-action-item {
-    border-top: 1px solid var(--border);
-  }
-
-  .add-action-item:active { background: var(--bg); }
-
-  .add-action-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 25;
-  }
-
-  .add-action-overlay.hidden { display: none; }
-
   /* ─── Modals: full-screen on mobile, content in bottom half ── */
   .modal-content {
     border-radius: 24px 24px 0 0;
@@ -1321,8 +1276,6 @@ input[type="number"]:focus {
 /* Hide bottom nav on desktop */
 @media (min-width: 769px) {
   .bottom-nav,
-  .add-action-menu,
-  .add-action-overlay,
   .areas-screen,
   .back-btn { display: none !important; }
 }
