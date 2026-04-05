@@ -1414,9 +1414,4 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   document.getElementById('data-menu-overlay').addEventListener('click', closeDataMenu);
 
-  // Register service worker
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./service-worker.js').catch(() => {});
-  }
-
 });
