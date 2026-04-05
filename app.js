@@ -139,6 +139,8 @@ function pickNextColor() {
   return generateAreaColor(state.areas.length);
 }
 
+const isMobile = () => window.innerWidth <= 768;
+
 // ─── Shared render helpers ────────────────────────────────────────────────────
 
 function getAreaColors(area) {
@@ -1328,8 +1330,6 @@ function saveArea() {
 }
 
 // ─── Mobile navigation ────────────────────────────────────────────────────────
-
-const isMobile = () => window.innerWidth <= 768;
 
 // Tracks whether the completed tab is active on mobile
 let mobileShowCompleted = false;
