@@ -378,11 +378,78 @@ function getTasksForView() {
   return { tasks: [], isDraggable: false };
 }
 
+// Builds and appends a single task card to taskList.
+// isDraggable, isCompleted, isAreaView are view-level flags passed explicitly
+// so this function has no dependency on the renderTasks() closure.
+function appendTaskCard(task, section, taskList, isDraggable, isCompleted, isAreaView) {
+  const area = state.areas.find(a => a.id === task.areaId);
+  const { borderColor } = getAreaColors(area);
+
+  const card = document.createElement('div');
+  card.className = 'task-card';
+  card.style.borderLeftColor = borderColor;
+  card.dataset.taskId = task.id;
+  if (section) card.dataset.section = section;
+
+  card.innerHTML = `
+    <div class="task-card-main">
+      <div class="task-card-content">
+        <div class="task-title">${escapeHtml(task.title)}</div>
+        <div class="task-meta">${buildAreaTag(area)}</div>
+      </div>
+      ${!isCompleted && isDraggable ? '<div class="drag-handle"></div>' : ''}
+    </div>
+  `;
+
+  if (isCompleted) {
+    if (isMobile()) addSwipeLeft(card, () => showTaskDeletePopup(card, task.id));
+  } else {
+    card.classList.add('task-tappable');
+    addTaskTapPopup(card, task);
+    if (isMobile()) {
+      if (isAreaView && !task.thisWeek) {
+        // Area view, not in week: swipe = delete, hold = add to week
+        addSwipeLeft(card, () => showTaskDeletePopup(card, task.id));
+        addThisWeekLongPress(card, task);
+      } else {
+        // This Week view or already-in-week task: swipe = remove from week
+        addSwipeLeft(card, () => showThisWeekPopup(card, task));
+      }
+    }
+  }
+
+  if (isDraggable && !isCompleted) {
+    if (!isMobile()) addDragHandlers(card, task.id, 'task', section);
+    addTouchDragHandlers(card, task.id, 'task', card.querySelector('.drag-handle'), section);
+  }
+  taskList.appendChild(card);
+}
+
+// Renders tasks split into "This Week" and "Later" sections (used for area and all-tasks views).
+function appendSectionedTasks(tasks, habitsRendered, taskList, isDraggable, isCompleted, isAreaView) {
+  const thisWeekTasks = tasks.filter(t => t.thisWeek);
+  const otherTasks    = tasks.filter(t => !t.thisWeek);
+
+  if (thisWeekTasks.length > 0) {
+    taskList.appendChild(createSectionLabel('TASKS FOR THIS WEEK'));
+    thisWeekTasks.forEach(t => appendTaskCard(t, 'thisweek', taskList, isDraggable, isCompleted, isAreaView));
+  }
+
+  if (otherTasks.length > 0) {
+    if (habitsRendered || thisWeekTasks.length > 0) {
+      taskList.appendChild(createSectionLabel('TASKS'));
+    }
+    otherTasks.forEach(t => appendTaskCard(t, 'other', taskList, isDraggable, isCompleted, isAreaView));
+  }
+}
+
 function renderTasks() {
   const taskList   = document.getElementById('task-list');
   const emptyState = document.getElementById('empty-state');
 
   const { tasks, isDraggable } = getTasksForView();
+  const isCompleted = state.currentView === 'completed' || mobileShowCompleted;
+  const isAreaView  = !!state.areas.find(a => a.id === state.currentView) && !isCompleted;
 
   const prevProgressWidths = new Map();
   taskList.querySelectorAll('.habit-card[data-habit-id]').forEach(card => {
@@ -411,74 +478,10 @@ function renderTasks() {
     emptyState.classList.add('hidden');
   }
 
-  const isCompleted = state.currentView === 'completed' || mobileShowCompleted;
-  const isAreaView = !!state.areas.find(a => a.id === state.currentView) && !isCompleted;
-
-  function appendTaskCard(task, section) {
-    const area = state.areas.find(a => a.id === task.areaId);
-    const { borderColor } = getAreaColors(area);
-
-    const card = document.createElement('div');
-    card.className = 'task-card';
-    card.style.borderLeftColor = borderColor;
-    card.dataset.taskId = task.id;
-    if (section) card.dataset.section = section;
-
-    card.innerHTML = `
-      <div class="task-card-main">
-        <div class="task-card-content">
-          <div class="task-title">${escapeHtml(task.title)}</div>
-          <div class="task-meta">${buildAreaTag(area)}</div>
-        </div>
-        ${!isCompleted && isDraggable ? '<div class="drag-handle"></div>' : ''}
-      </div>
-    `;
-
-    if (isCompleted) {
-      if (isMobile()) addSwipeLeft(card, () => showTaskDeletePopup(card, task.id));
-    } else {
-      card.classList.add('task-tappable');
-      addTaskTapPopup(card, task);
-      if (isMobile()) {
-        if (isAreaView && !task.thisWeek) {
-          // Area view, not in week: swipe = delete, hold = add to week
-          addSwipeLeft(card, () => showTaskDeletePopup(card, task.id));
-          addThisWeekLongPress(card, task);
-        } else {
-          // This Week view or already-in-week task: swipe = remove from week
-          addSwipeLeft(card, () => showThisWeekPopup(card, task));
-        }
-      }
-    }
-
-    if (isDraggable && !isCompleted) {
-      if (!isMobile()) addDragHandlers(card, task.id, 'task', section);
-      addTouchDragHandlers(card, task.id, 'task', card.querySelector('.drag-handle'), section);
-    }
-    taskList.appendChild(card);
-  }
-
-  function appendSectionedTasks(tasks, habitsRendered) {
-    const thisWeekTasks = tasks.filter(t => t.thisWeek);
-    const otherTasks    = tasks.filter(t => !t.thisWeek);
-
-    if (thisWeekTasks.length > 0) {
-      taskList.appendChild(createSectionLabel('TASKS FOR THIS WEEK'));
-      thisWeekTasks.forEach(t => appendTaskCard(t, 'thisweek'));
-    }
-
-    if (otherTasks.length > 0) {
-      if (habitsRendered || thisWeekTasks.length > 0) {
-        taskList.appendChild(createSectionLabel('TASKS'));
-      }
-      otherTasks.forEach(t => appendTaskCard(t, 'other'));
-    }
-  }
-
   if (isAreaView || (state.currentView === 'all' && !mobileShowCompleted)) {
-    appendSectionedTasks(tasks, habitsRendered);
+    appendSectionedTasks(tasks, habitsRendered, taskList, isDraggable, isCompleted, isAreaView);
   } else {
-    tasks.forEach(t => appendTaskCard(t, null));
+    tasks.forEach(t => appendTaskCard(t, null, taskList, isDraggable, isCompleted, isAreaView));
   }
 }
 
