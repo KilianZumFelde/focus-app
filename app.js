@@ -13,10 +13,6 @@ function generateAreaColor(index) {
   return `hsl(${Math.round(hue)}, 45%, 78%)`;
 }
 
-function pickNextColor() {
-  return generateAreaColor(state.areas.length);
-}
-
 // ─── Default state ────────────────────────────────────────────────────────────
 
 const DEFAULT_STATE = {
