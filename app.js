@@ -141,6 +141,13 @@ function pickNextColor() {
 
 const isMobile = () => window.innerWidth <= 768;
 
+function createSectionLabel(text) {
+  const label = document.createElement('span');
+  label.className = 'section-label';
+  label.textContent = text;
+  return label;
+}
+
 // ─── Shared render helpers ────────────────────────────────────────────────────
 
 function getAreaColors(area) {
@@ -231,10 +238,7 @@ function renderGoals(taskList) {
 
   const isLabelledView = state.currentView === 'this-week' || state.areas.find(a => a.id === state.currentView);
   if (isLabelledView) {
-    const goalsLabel = document.createElement('span');
-    goalsLabel.className = 'section-label';
-    goalsLabel.textContent = 'HABITS';
-    taskList.appendChild(goalsLabel);
+    taskList.appendChild(createSectionLabel('HABITS'));
   }
 
   goals.forEach(goal => {
@@ -375,10 +379,7 @@ function renderTasks() {
   const goalsRendered = renderGoals(taskList);
 
   if (goalsRendered && tasks.length > 0 && !state.areas.find(a => a.id === state.currentView) && state.currentView !== 'all') {
-    const tasksLabel = document.createElement('span');
-    tasksLabel.className = 'section-label';
-    tasksLabel.textContent = 'TASKS';
-    taskList.appendChild(tasksLabel);
+    taskList.appendChild(createSectionLabel('TASKS'));
   }
 
   if (!goalsRendered && tasks.length === 0) {
@@ -446,19 +447,13 @@ function renderTasks() {
     const otherTasks    = tasks.filter(t => !t.thisWeek);
 
     if (thisWeekTasks.length > 0) {
-      const label = document.createElement('span');
-      label.className = 'section-label';
-      label.textContent = 'TASKS FOR THIS WEEK';
-      taskList.appendChild(label);
+      taskList.appendChild(createSectionLabel('TASKS FOR THIS WEEK'));
       thisWeekTasks.forEach(t => appendTaskCard(t, 'thisweek'));
     }
 
     if (otherTasks.length > 0) {
       if (goalsRendered || thisWeekTasks.length > 0) {
-        const label = document.createElement('span');
-        label.className = 'section-label';
-        label.textContent = 'TASKS';
-        taskList.appendChild(label);
+        taskList.appendChild(createSectionLabel('TASKS'));
       }
       otherTasks.forEach(t => appendTaskCard(t, 'other'));
     }
@@ -468,19 +463,13 @@ function renderTasks() {
     const otherTasks    = tasks.filter(t => !t.thisWeek);
 
     if (thisWeekTasks.length > 0) {
-      const label = document.createElement('span');
-      label.className = 'section-label';
-      label.textContent = 'TASKS FOR THIS WEEK';
-      taskList.appendChild(label);
+      taskList.appendChild(createSectionLabel('TASKS FOR THIS WEEK'));
       thisWeekTasks.forEach(t => appendTaskCard(t, 'thisweek'));
     }
 
     if (otherTasks.length > 0) {
       if (goalsRendered || thisWeekTasks.length > 0) {
-        const label = document.createElement('span');
-        label.className = 'section-label';
-        label.textContent = 'TASKS';
-        taskList.appendChild(label);
+        taskList.appendChild(createSectionLabel('TASKS'));
       }
       otherTasks.forEach(t => appendTaskCard(t, 'other'));
     }
