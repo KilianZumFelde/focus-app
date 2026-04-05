@@ -235,7 +235,7 @@ function renderGoals(taskList) {
   if (isLabelledView) {
     const goalsLabel = document.createElement('span');
     goalsLabel.className = 'section-label';
-    goalsLabel.textContent = 'GOALS';
+    goalsLabel.textContent = 'HABITS';
     taskList.appendChild(goalsLabel);
   }
 
@@ -289,7 +289,7 @@ function renderTasks() {
     isDraggable = true;
     addNewBtn.classList.remove('hidden');
   } else if (state.currentView === 'all') {
-    title = 'All Tasks & Goals';
+    title = 'All Tasks & Habits';
     tasks = state.tasks.filter(t => !t.done);
     isDraggable = true;
     addNewBtn.classList.remove('hidden');
@@ -596,7 +596,7 @@ function deleteGoal(id) {
   commit();
 }
 
-// ─── New modal (unified task + goal) ─────────────────────────────────────────
+// ─── New modal ────────────────────────────────────────────────────────────────
 
 let fixedModalAreaId = null;
 
@@ -606,7 +606,8 @@ function openNewModal(fixedAreaId = null) {
   const defaultThisWeek = state.currentView === 'this-week';
 
   document.getElementById('new-title-input').value = '';
-  setNewModalType('task');
+  document.getElementById('new-target-display').textContent = '1';
+  document.getElementById('new-target-input').value = '1';
 
   // Area selector
   if (fixedAreaId) {
@@ -622,46 +623,33 @@ function openNewModal(fixedAreaId = null) {
     populateAreaSelect('new-area-select', defaultAreaId);
   }
 
-  // This Week default
-  if (isMobile()) {
-    document.getElementById('new-toggle-this-week').classList.toggle('selected', defaultThisWeek);
-    document.getElementById('new-toggle-later').classList.toggle('selected', !defaultThisWeek);
-    document.getElementById('new-thisweek-check-group').classList.add('hidden');
-  } else {
-    document.getElementById('new-thisweek-check').checked = defaultThisWeek;
-    document.getElementById('new-thisweek-toggle-group').classList.add('hidden');
-  }
-
-  document.getElementById('new-target-display').textContent = '1';
-  document.getElementById('new-target-input').value = '1';
+  // Default toggle selection
+  setNewToggle(defaultThisWeek ? 'this-week' : 'later');
 
   document.getElementById('new-modal').classList.remove('hidden');
   document.getElementById('new-title-input').focus();
 }
 
-function setNewModalType(type) {
-  const isTask = type === 'task';
+function setNewToggle(type) {
+  // type: 'this-week' | 'later' | 'habit'
+  document.getElementById('new-toggle-this-week').classList.toggle('selected', type === 'this-week');
+  document.getElementById('new-toggle-later').classList.toggle('selected', type === 'later');
+  document.getElementById('new-toggle-habit').classList.toggle('selected', type === 'habit');
 
-  document.getElementById('new-type-task').classList.toggle('selected', isTask);
-  document.getElementById('new-type-goal').classList.toggle('selected', !isTask);
-
-  // This Week toggle — task only
+  const isHabit = type === 'habit';
   if (isMobile()) {
-    document.getElementById('new-thisweek-toggle-group').classList.toggle('hidden', !isTask);
-    document.getElementById('new-thisweek-check-group').classList.add('hidden');
-  } else {
-    document.getElementById('new-thisweek-check-group').classList.toggle('hidden', !isTask);
-    document.getElementById('new-thisweek-toggle-group').classList.add('hidden');
-  }
-
-  // Weekly target — goal only
-  if (isMobile()) {
-    document.getElementById('new-target-counter-group').classList.toggle('hidden', isTask);
+    document.getElementById('new-target-counter-group').classList.toggle('hidden', !isHabit);
     document.getElementById('new-target-input-group').classList.add('hidden');
   } else {
-    document.getElementById('new-target-input-group').classList.toggle('hidden', isTask);
+    document.getElementById('new-target-input-group').classList.toggle('hidden', !isHabit);
     document.getElementById('new-target-counter-group').classList.add('hidden');
   }
+}
+
+function getNewToggle() {
+  if (document.getElementById('new-toggle-habit').classList.contains('selected')) return 'habit';
+  if (document.getElementById('new-toggle-this-week').classList.contains('selected')) return 'this-week';
+  return 'later';
 }
 
 function closeNewModal() {
@@ -673,7 +661,7 @@ function saveNew() {
   const title = document.getElementById('new-title-input').value.trim();
   if (!title) { document.getElementById('new-title-input').focus(); return; }
 
-  const isGoal = document.getElementById('new-type-goal').classList.contains('selected');
+  const isGoal = getNewToggle() === 'habit';
   const areaId = fixedModalAreaId || (isMobile() ? getSelectedAreaPill('new-area-pills') : document.getElementById('new-area-select').value);
 
   if (isGoal) {
@@ -690,9 +678,7 @@ function saveNew() {
       lastResetWeek: getCurrentWeekKey(),
     });
   } else {
-    const thisWeek = isMobile()
-      ? document.getElementById('new-toggle-this-week').classList.contains('selected')
-      : document.getElementById('new-thisweek-check').checked;
+    const thisWeek = getNewToggle() === 'this-week';
     state.tasks.push({
       id:          generateId(),
       title,
@@ -1014,7 +1000,7 @@ function showGoalDeletePopup(card, goalId) {
   popup.className = 'goal-delete-popup';
   popup.innerHTML = `
     <div class="area-delete-popup-inner">
-      <span class="area-delete-label">Delete goal?</span>
+      <span class="area-delete-label">Delete habit?</span>
       <button class="area-delete-confirm">Delete</button>
       <button class="area-delete-cancel">Cancel</button>
     </div>
@@ -1473,16 +1459,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (e.key === 'Enter') saveNew();
     if (e.key === 'Escape') closeNewModal();
   });
-  document.getElementById('new-type-task').addEventListener('click', () => setNewModalType('task'));
-  document.getElementById('new-type-goal').addEventListener('click', () => setNewModalType('goal'));
-  document.getElementById('new-toggle-this-week').addEventListener('click', () => {
-    document.getElementById('new-toggle-this-week').classList.add('selected');
-    document.getElementById('new-toggle-later').classList.remove('selected');
-  });
-  document.getElementById('new-toggle-later').addEventListener('click', () => {
-    document.getElementById('new-toggle-later').classList.add('selected');
-    document.getElementById('new-toggle-this-week').classList.remove('selected');
-  });
+  document.getElementById('new-toggle-this-week').addEventListener('click', () => setNewToggle('this-week'));
+  document.getElementById('new-toggle-later').addEventListener('click', () => setNewToggle('later'));
+  document.getElementById('new-toggle-habit').addEventListener('click', () => setNewToggle('habit'));
   document.getElementById('new-target-increment').addEventListener('click', () => {
     const display = document.getElementById('new-target-display');
     display.textContent = parseInt(display.textContent) + 1;

@@ -111,17 +111,11 @@
   <div class="data-menu-overlay hidden" id="data-menu-overlay"></div>
   <input type="file" id="import-file-input" accept=".json" style="display:none">
 
-  <!-- New Modal (Task or Goal) -->
+  <!-- New Modal -->
   <div id="new-modal" class="modal hidden">
     <div class="modal-overlay" id="new-modal-overlay"></div>
     <div class="modal-content">
-      <!-- Task / Goal toggle -->
-      <div class="form-group">
-        <div class="week-toggle">
-          <button class="week-toggle-option selected" id="new-type-task">Task</button>
-          <button class="week-toggle-option" id="new-type-goal">Goal</button>
-        </div>
-      </div>
+      <h3>Create new</h3>
       <!-- Title -->
       <div class="form-group">
         <input type="text" id="new-title-input" placeholder="What needs to get done?" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
@@ -136,26 +130,20 @@
         <label>Area</label>
         <div class="area-pills-scroll" id="new-area-pills"></div>
       </div>
-      <!-- This Week toggle (task only) -->
-      <div class="form-group hidden" id="new-thisweek-toggle-group">
+      <!-- Three-way toggle: This Week / Later / Habit -->
+      <div class="form-group" id="new-type-toggle-group">
         <div class="week-toggle">
-          <button class="week-toggle-option selected" id="new-toggle-this-week">This Week</button>
+          <button class="week-toggle-option" id="new-toggle-this-week">This Week</button>
           <button class="week-toggle-option" id="new-toggle-later">Later</button>
+          <button class="week-toggle-option" id="new-toggle-habit">Habit</button>
         </div>
       </div>
-      <!-- Desktop: This Week checkbox (task only) -->
-      <div class="form-group checkbox-group" id="new-thisweek-check-group">
-        <label>
-          <input type="checkbox" id="new-thisweek-check" />
-          Add to This Week
-        </label>
-      </div>
-      <!-- Weekly target: desktop number input (goal only) -->
+      <!-- Weekly target: desktop number input (habit only) -->
       <div class="form-group hidden" id="new-target-input-group">
         <label for="new-target-input">Weekly target</label>
         <input type="text" inputmode="numeric" id="new-target-input" min="1" value="1" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
       </div>
-      <!-- Weekly target: mobile counter (goal only) -->
+      <!-- Weekly target: mobile counter (habit only) -->
       <div class="form-group hidden" id="new-target-counter-group">
         <label>Weekly target</label>
         <div class="goal-target-counter">
@@ -193,7 +181,7 @@
       <h3>New week, new start.</h3>
       <div class="weekly-review-stats">
         <div class="weekly-review-stat-row">
-          <span class="weekly-review-label">Goals accomplished</span>
+          <span class="weekly-review-label">Habits accomplished</span>
           <span class="weekly-review-value" id="weekly-goals-stat">0 / 0</span>
         </div>
         <div class="weekly-review-stat-row">
