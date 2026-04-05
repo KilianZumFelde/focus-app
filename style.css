@@ -270,13 +270,6 @@ body {
   white-space: nowrap;
 }
 
-.task-desc {
-  font-size: 13px;
-  color: var(--text-secondary);
-  line-height: 1.55;
-  margin-bottom: 10px;
-}
-
 .task-meta {
   display: flex;
   align-items: center;
@@ -292,63 +285,6 @@ body {
   padding: 3px 9px;
   border-radius: 20px;
   letter-spacing: 0.1px;
-}
-
-/* Task action buttons */
-.task-card-actions {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  flex-shrink: 0;
-  opacity: 0;
-  transition: opacity 0.15s;
-}
-
-.task-card:hover .task-card-actions {
-  opacity: 1;
-}
-
-.action-btn {
-  background: none;
-  border: 1px solid transparent;
-  cursor: pointer;
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius-sm);
-  font-size: 15px;
-  color: var(--text-muted);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.12s;
-  flex-shrink: 0;
-}
-
-.action-btn:hover {
-  background: var(--bg);
-  border-color: var(--border);
-  color: var(--text-primary);
-}
-
-.action-btn.complete-btn:hover {
-  color: #3faa6e;
-  border-color: rgba(63, 170, 110, 0.25);
-  background: rgba(63, 170, 110, 0.08);
-}
-
-.action-btn.delete-btn:hover {
-  color: #d94f4f;
-  border-color: rgba(217, 79, 79, 0.25);
-  background: rgba(217, 79, 79, 0.08);
-}
-
-.action-btn.thisweek-btn {
-  font-size: 16px;
-}
-
-.action-btn.thisweek-btn.active {
-  color: var(--text-primary);
-  opacity: 1 !important;
 }
 
 /* ─── Buttons ───────────────────────────────────────── */
@@ -465,22 +401,6 @@ body {
   margin-bottom: 6px;
 }
 
-.goal-icon {
-  font-size: 13px;
-  color: var(--text-muted);
-  flex-shrink: 0;
-}
-
-.goal-corner-icon {
-  position: absolute;
-  top: 7px;
-  right: 52px;
-  font-size: 11px;
-  color: var(--text-muted);
-  pointer-events: none;
-  opacity: 0.6;
-}
-
 .goal-title {
   font-size: 15px;
   font-weight: 500;
@@ -490,7 +410,6 @@ body {
   white-space: nowrap;
 }
 
-.goal-card.goal-done .goal-icon,
 .goal-card.goal-done .goal-title {
   color: #3faa6e;
 }
@@ -541,38 +460,6 @@ body {
 
 .goal-card.goal-done .counter-display {
   color: #3faa6e;
-}
-
-/* Goal hover actions */
-.goal-card-actions {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  flex-shrink: 0;
-  opacity: 0;
-  transition: opacity 0.15s;
-}
-
-.goal-card:hover .goal-card-actions {
-  opacity: 1;
-}
-
-/* Number input in modal */
-input[type="number"] {
-  width: 100%;
-  padding: 11px 14px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  font-size: 14px;
-  color: var(--text-primary);
-  background: var(--bg);
-  outline: none;
-  transition: border-color 0.12s;
-  font-family: inherit;
-}
-
-input[type="number"]:focus {
-  border-color: var(--text-primary);
 }
 
 /* ─── Drag handle ───────────────────────────────────────────────────────────── */
@@ -750,7 +637,6 @@ input[type="number"]:focus {
 }
 
 .form-group input[type="text"],
-.form-group textarea,
 .form-group select {
   width: 100%;
   padding: 11px 14px;
@@ -765,33 +651,8 @@ input[type="number"]:focus {
 }
 
 .form-group input[type="text"]:focus,
-.form-group textarea:focus,
 .form-group select:focus {
   border-color: var(--text-primary);
-}
-
-.form-group textarea {
-  resize: none;
-  line-height: 1.5;
-}
-
-.checkbox-group label {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  font-size: 14px;
-  font-weight: 400;
-  color: var(--text-primary);
-  text-transform: none;
-  letter-spacing: 0;
-  cursor: pointer;
-}
-
-.checkbox-group input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
-  cursor: pointer;
-  accent-color: var(--text-primary);
 }
 
 .modal-actions {
@@ -977,27 +838,6 @@ input[type="number"]:focus {
     color: var(--text-secondary);
   }
 
-  /* Shared add-card style for task list bottom buttons */
-  .add-card {
-    background: none;
-    border: 1px dashed var(--border);
-    border-radius: var(--radius);
-    padding: 16px 20px;
-    text-align: center;
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--text-secondary);
-    cursor: pointer;
-    width: 100%;
-    font-family: inherit;
-    transition: border-color 0.12s, color 0.12s;
-  }
-
-  .add-card:active {
-    color: var(--text-primary);
-    border-color: var(--text-muted);
-  }
-
   /* ─── Bottom nav ─────────────────────────────────────── */
   .bottom-nav {
     position: fixed;
@@ -1031,8 +871,6 @@ input[type="number"]:focus {
   }
 
   .bottom-nav-item.active { color: var(--text-primary); }
-
-  .bottom-nav-icon { font-size: 18px; }
 
   .bottom-nav-label {
     font-size: 14px;
@@ -1136,39 +974,6 @@ input[type="number"]:focus {
   .goal-card {
     padding: 16px;
   }
-
-  .task-card-actions,
-  .goal-card-actions {
-    opacity: 1;
-  }
-
-  .action-btn {
-    width: 36px;
-    height: 36px;
-  }
-}
-
-/* ─── Area view add buttons ─────────────────────────────────────────────────── */
-.add-card {
-  background: var(--surface);
-  border: 1px dashed var(--border);
-  border-left: 4px solid transparent;
-  border-radius: var(--radius);
-  padding: 22px 20px;
-  text-align: center;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--text-secondary);
-  cursor: pointer;
-  width: 100%;
-  font-family: inherit;
-  transition: border-color 0.12s, color 0.12s;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-}
-
-.add-card:hover {
-  color: var(--text-primary);
-  border-color: var(--text-muted);
 }
 
 /* ─── Mobile: area pills selector ───────────────────────────────────────────── */
