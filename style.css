@@ -488,7 +488,7 @@ body {
   content: '';
   display: block;
   width: 18px;
-  height: 2.5px;
+  height: 2px;
   background: var(--text-muted);
   border-radius: 2px;
   box-shadow: 0 -6px 0 var(--text-muted), 0 6px 0 var(--text-muted);
@@ -589,11 +589,16 @@ body {
 }
 
 /* ─── Drag and drop ─────────────────────────────────────────────────────────── */
-.task-card[draggable="true"] { cursor: grab; }
-.task-card[draggable="true"]:active { cursor: grabbing; }
-.task-card.dragging { opacity: 0.4; }
-.task-card.drag-over-top { border-top: 2px solid var(--text-primary); }
-.task-card.drag-over-bottom { border-bottom: 2px solid var(--text-primary); }
+.task-card[draggable="true"],
+.goal-card[draggable="true"] { cursor: grab; }
+.task-card[draggable="true"]:active,
+.goal-card[draggable="true"]:active { cursor: grabbing; }
+.task-card.dragging,
+.goal-card.dragging { opacity: 0.4; }
+.task-card.drag-over-top,
+.goal-card.drag-over-top { border-top: 2px solid var(--text-primary); }
+.task-card.drag-over-bottom,
+.goal-card.drag-over-bottom { border-bottom: 2px solid var(--text-primary); }
 
 /* ─── Modals ────────────────────────────────────────── */
 .modal {
