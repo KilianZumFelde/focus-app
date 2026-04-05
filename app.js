@@ -1,6 +1,18 @@
 // ─── Debug flags ─────────────────────────────────────────────────────────────
 const DEBUG_WEEKLY_REVIEW = false; // set true to force weekly review modal on every load
 
+// ─── Constants ────────────────────────────────────────────────────────────────
+
+const MOBILE_BREAKPOINT    = 768;         // px — must match @media breakpoint in style.css
+const STORAGE_KEY          = STORAGE_KEY;
+const WEEKLY_REVIEW_KEY    = WEEKLY_REVIEW_KEY;
+const LONG_PRESS_DATA_MS   = 800;         // ms — long-press to open data menu
+const LONG_PRESS_WEEK_MS   = 600;         // ms — long-press to toggle This Week
+const COMPLETE_FLASH_MS    = 300;         // ms — green flash phase of task completion animation
+const COMPLETE_COLLAPSE_MS = 300;         // ms — collapse phase of task completion animation
+const SWIPE_THRESHOLD_PX   = 60;          // px — minimum swipe distance to trigger action
+const COLOR_SUCCESS        = '#3faa6e';   // matches --color-success in style.css
+
 // ─── Color generation for areas ──────────────────────────────────────────────
 // Spreads hues evenly around the color wheel using a golden angle offset
 // so consecutive areas are always maximally distinct.
@@ -36,7 +48,7 @@ let pendingWeeklyStats = null;
 
 function loadState() {
   try {
-    const saved = localStorage.getItem('focus-app-v1');
+    const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       const parsed = JSON.parse(saved);
       state = { ...DEFAULT_STATE, ...parsed };
@@ -48,7 +60,7 @@ function loadState() {
 }
 
 function saveState() {
-  localStorage.setItem('focus-app-v1', JSON.stringify(state));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
 
 function generateId() {
@@ -71,7 +83,7 @@ function resetGoalsIfNewWeek() {
   let stats = null;
 
   const needsReset = state.goals.some(g => g.lastResetWeek !== weekKey);
-  const alreadyShown = localStorage.getItem('focus-weekly-review-shown') === weekKey;
+  const alreadyShown = localStorage.getItem(WEEKLY_REVIEW_KEY) === weekKey;
 
   if (needsReset || DEBUG_WEEKLY_REVIEW) {
     // Capture last week's stats before resetting
@@ -104,7 +116,7 @@ function resetGoalsIfNewWeek() {
     });
 
     if (!DEBUG_WEEKLY_REVIEW) {
-      localStorage.setItem('focus-weekly-review-shown', weekKey);
+      localStorage.setItem(WEEKLY_REVIEW_KEY, weekKey);
     }
   }
 
@@ -139,7 +151,7 @@ function pickNextColor() {
   return generateAreaColor(state.areas.length);
 }
 
-const isMobile = () => window.innerWidth <= 768;
+const isMobile = () => window.innerWidth <= MOBILE_BREAKPOINT;
 
 function createSectionLabel(text) {
   const label = document.createElement('span');
@@ -255,7 +267,7 @@ function renderGoals(taskList, prevProgressWidths = new Map()) {
     card.dataset.goalId = goal.id;
 
     const progress = goal.target > 0 ? Math.min(goal.count / goal.target, 1) : 0;
-    const fillColor = isDone ? '#3faa6e' : (area ? area.color.replace(/^hsl\((.+)\)$/, 'hsla($1, 0.8)') : 'transparent');
+    const fillColor = isDone ? COLOR_SUCCESS : (area ? area.color.replace(/^hsl\((.+)\)$/, 'hsla($1, 0.8)') : 'transparent');
 
     card.innerHTML = `
       <div class="goal-card-main">
@@ -520,8 +532,8 @@ function completeTask(id) {
       task.done = true;
       task.completedAt = new Date().toISOString();
       commit();
-    }, 300);
-  }, 300);
+    }, COMPLETE_COLLAPSE_MS);
+  }, COMPLETE_FLASH_MS);
 }
 
 function toggleThisWeek(id) {
@@ -898,7 +910,7 @@ function addSwipeLeft(card, onSwipe) {
   let startY = 0;
   let swiping = false;
   let swipeCommitted = false;
-  const THRESHOLD = 60;
+  const THRESHOLD = SWIPE_THRESHOLD_PX;
 
   card.addEventListener('touchstart', (e) => {
     if (e.target.closest('.drag-handle')) return;
@@ -1018,7 +1030,7 @@ function addThisWeekLongPress(card, task) {
   addTouchLongPress(card, () => {
     card._longPressActive = true;
     showThisWeekPopup(card, task);
-  }, 600, (e) => {
+  }, LONG_PRESS_WEEK_MS, (e) => {
     if (e.target.closest('.drag-handle')) return false;
     card._longPressActive = false;
   });
@@ -1193,10 +1205,10 @@ function importData(file) {
 }
 
 function addDataMenuLongPress(el) {
-  addTouchLongPress(el, openDataMenu, 800);
+  addTouchLongPress(el, openDataMenu, LONG_PRESS_DATA_MS);
   // Desktop: long mousedown
   let holdTimer = null;
-  el.addEventListener('mousedown',  () => { holdTimer = setTimeout(() => { holdTimer = null; openDataMenu(); }, 800); });
+  el.addEventListener('mousedown',  () => { holdTimer = setTimeout(() => { holdTimer = null; openDataMenu(); }, LONG_PRESS_DATA_MS); });
   el.addEventListener('mouseup',    () => { if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; } });
   el.addEventListener('mouseleave', () => { if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; } });
 }

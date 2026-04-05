@@ -14,6 +14,7 @@
   --text-muted: #C0BCB2;
   --radius: 12px;
   --radius-sm: 8px;
+  --color-success: #3faa6e; /* matches COLOR_SUCCESS in app.js */
 }
 
 body {
@@ -468,7 +469,7 @@ body {
 }
 
 .goal-card.goal-done .counter-display {
-  color: #3faa6e;
+  color: var(--color-success);
 }
 
 /* ─── Drag handle ───────────────────────────────────────────────────────────── */
@@ -554,7 +555,7 @@ body {
   border: none;
   font-size: 13px;
   font-weight: 600;
-  color: #3faa6e;
+  color: var(--color-success);
   cursor: pointer;
   font-family: inherit;
   padding: 4px 8px;
@@ -580,7 +581,7 @@ body {
 /* ─── Task completion animation ─────────────────────────────────────────────── */
 .task-card.completing-flash {
   background: #edf7f1;
-  border-left-color: #3faa6e !important;
+  border-left-color: var(--color-success) !important;
   transition: background 0.25s ease, border-left-color 0.25s ease;
 }
 
@@ -706,6 +707,7 @@ body {
 .back-btn:hover { color: var(--text-primary); }
 
 /* ─── Mobile styles ──────────────────────────────────────────────────────────── */
+/* Breakpoint: 768px — must match MOBILE_BREAKPOINT constant in app.js          */
 @media (max-width: 768px) {
 
   /* Hide desktop sidebar */
