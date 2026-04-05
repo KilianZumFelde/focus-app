@@ -957,18 +957,18 @@ function showTaskDeletePopup(card, taskId) {
   const popup = document.createElement('div');
   popup.className = 'goal-delete-popup';
   popup.innerHTML = `
-    <div class="area-delete-popup-inner">
-      <span class="area-delete-label">Delete task?</span>
-      <button class="area-delete-confirm">Delete</button>
-      <button class="area-delete-cancel">Cancel</button>
+    <div class="popup-inner">
+      <span class="popup-label">Delete task?</span>
+      <button class="popup-confirm-red">Delete</button>
+      <button class="popup-cancel">Cancel</button>
     </div>
   `;
-  popup.querySelector('.area-delete-confirm').addEventListener('click', (e) => {
+  popup.querySelector('.popup-confirm-red').addEventListener('click', (e) => {
     e.stopPropagation();
     popup.remove();
     deleteTask(taskId);
   });
-  popup.querySelector('.area-delete-cancel').addEventListener('click', (e) => {
+  popup.querySelector('.popup-cancel').addEventListener('click', (e) => {
     e.stopPropagation();
     popup.remove();
   });
@@ -984,18 +984,18 @@ function showGoalDeletePopup(card, goalId) {
   const popup = document.createElement('div');
   popup.className = 'goal-delete-popup';
   popup.innerHTML = `
-    <div class="area-delete-popup-inner">
-      <span class="area-delete-label">Delete habit?</span>
-      <button class="area-delete-confirm">Delete</button>
-      <button class="area-delete-cancel">Cancel</button>
+    <div class="popup-inner">
+      <span class="popup-label">Delete habit?</span>
+      <button class="popup-confirm-red">Delete</button>
+      <button class="popup-cancel">Cancel</button>
     </div>
   `;
-  popup.querySelector('.area-delete-confirm').addEventListener('click', (e) => {
+  popup.querySelector('.popup-confirm-red').addEventListener('click', (e) => {
     e.stopPropagation();
     popup.remove();
     deleteGoal(goalId);
   });
-  popup.querySelector('.area-delete-cancel').addEventListener('click', (e) => {
+  popup.querySelector('.popup-cancel').addEventListener('click', (e) => {
     e.stopPropagation();
     popup.remove();
   });
@@ -1037,12 +1037,12 @@ function showThisWeekPopup(card, task) {
 
   const popup = document.createElement('div');
   popup.className = 'thisweek-popup';
-  const confirmClass = task.thisWeek ? 'area-delete-confirm' : 'confirm-green';
+  const confirmClass = task.thisWeek ? 'popup-confirm-red' : 'confirm-green';
   popup.innerHTML = `
-    <div class="area-delete-popup-inner">
-      <span class="area-delete-label">${label}</span>
+    <div class="popup-inner">
+      <span class="popup-label">${label}</span>
       <button class="${confirmClass}">${actionLabel}</button>
-      <button class="area-delete-cancel">Cancel</button>
+      <button class="popup-cancel">Cancel</button>
     </div>
   `;
 
@@ -1051,7 +1051,7 @@ function showThisWeekPopup(card, task) {
     popup.remove();
     toggleThisWeek(task.id);
   });
-  popup.querySelector('.area-delete-cancel').addEventListener('click', (e) => {
+  popup.querySelector('.popup-cancel').addEventListener('click', (e) => {
     e.stopPropagation();
     popup.remove();
   });
@@ -1076,10 +1076,10 @@ function showTaskCompletePopup(card, task) {
   const popup = document.createElement('div');
   popup.className = 'task-complete-popup';
   popup.innerHTML = `
-    <div class="area-delete-popup-inner">
-      <span class="area-delete-label">Complete task?</span>
+    <div class="popup-inner">
+      <span class="popup-label">Complete task?</span>
       <button class="confirm-green">Complete</button>
-      <button class="area-delete-cancel">Cancel</button>
+      <button class="popup-cancel">Cancel</button>
     </div>
   `;
   popup.querySelector('.confirm-green').addEventListener('click', (e) => {
@@ -1087,7 +1087,7 @@ function showTaskCompletePopup(card, task) {
     popup.remove();
     completeTask(task.id);
   });
-  popup.querySelector('.area-delete-cancel').addEventListener('click', (e) => {
+  popup.querySelector('.popup-cancel').addEventListener('click', (e) => {
     e.stopPropagation();
     popup.remove();
   });
@@ -1124,7 +1124,7 @@ function showGoalCounterPopup(card, goal) {
   const g = getGoal();
   if (!g) return;
   popup.innerHTML = `
-    <div class="area-delete-popup-inner">
+    <div class="popup-inner">
       <button class="counter-btn popup-decrement" ${g.count <= 0 ? 'disabled' : ''}>−</button>
       <span class="popup-count counter-display">${g.count} / ${g.target}</span>
       <button class="counter-btn popup-increment" ${g.count >= g.target ? 'disabled' : ''}>+</button>
@@ -1262,22 +1262,22 @@ function showAreaDeletePopup(areaId, areaName, anchorCard) {
   popup.id = 'area-delete-popup';
   popup.className = 'area-delete-popup';
   popup.innerHTML = `
-    <div class="area-delete-popup-inner">
-      <span class="area-delete-label">${taskCount > 0
+    <div class="popup-inner">
+      <span class="popup-label">${taskCount > 0
         ? `Delete "${escapeHtml(areaName)}"? (${taskCount} task${taskCount > 1 ? 's' : ''} will be deleted)`
         : `Delete "${escapeHtml(areaName)}"?`
       }</span>
-      <button class="area-delete-confirm">Delete</button>
-      <button class="area-delete-cancel">Cancel</button>
+      <button class="popup-confirm-red">Delete</button>
+      <button class="popup-cancel">Cancel</button>
     </div>
   `;
 
-  popup.querySelector('.area-delete-confirm').addEventListener('click', (e) => {
+  popup.querySelector('.popup-confirm-red').addEventListener('click', (e) => {
     e.stopPropagation();
     popup.remove();
     deleteArea(areaId);
   });
-  popup.querySelector('.area-delete-cancel').addEventListener('click', (e) => {
+  popup.querySelector('.popup-cancel').addEventListener('click', (e) => {
     e.stopPropagation();
     popup.remove();
   });

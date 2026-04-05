@@ -507,20 +507,20 @@ body {
   z-index: 5;
 }
 
-.area-delete-popup-inner {
+.popup-inner {
   display: flex;
   align-items: center;
   gap: 10px;
   width: 100%;
 }
 
-.area-delete-label {
+.popup-label {
   font-size: 13px;
   color: var(--text-secondary);
   flex: 1;
 }
 
-.area-delete-confirm {
+.popup-confirm-red {
   background: none;
   border: none;
   font-size: 13px;
@@ -542,7 +542,7 @@ body {
   padding: 4px 8px;
 }
 
-.area-delete-cancel {
+.popup-cancel {
   background: none;
   border: none;
   font-size: 13px;
