@@ -1383,7 +1383,6 @@ function setMobileView(view) {
   state.currentView = view;
   updateMobileBottomNav(view);
   updateBackBtn(view);
-  updateCompletedToggle(view);
   render();
 }
 
@@ -1403,10 +1402,6 @@ function updateBackBtn(view) {
   } else {
     backBtn.classList.add('hidden');
   }
-}
-
-function updateCompletedToggle() {
-  // No-op: completed toggle removed, now using inline header link
 }
 
 function openAddActionMenu() {
