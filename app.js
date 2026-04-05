@@ -948,57 +948,46 @@ function addSwipeLeft(card, onSwipe) {
 }
 
 
-// ─── Task swipe delete popup ─────────────────────────────────────────────────
+// ─── Inline card popup builder ───────────────────────────────────────────────
 
-function showTaskDeletePopup(card, taskId) {
-  const existing = card.querySelector('.goal-delete-popup');
-  if (existing) existing.remove();
-
+// Creates a popup overlay with a label, a confirm button, and a cancel button.
+// label/confirmText are treated as HTML — escape any user-supplied content before passing.
+function createInlinePopup(label, confirmText, confirmClass, onConfirm) {
   const popup = document.createElement('div');
-  popup.className = 'goal-delete-popup';
   popup.innerHTML = `
     <div class="popup-inner">
-      <span class="popup-label">Delete task?</span>
-      <button class="popup-confirm-red">Delete</button>
+      <span class="popup-label">${label}</span>
+      <button class="${confirmClass}">${confirmText}</button>
       <button class="popup-cancel">Cancel</button>
     </div>
   `;
-  popup.querySelector('.popup-confirm-red').addEventListener('click', (e) => {
+  popup.querySelector(`.${confirmClass}`).addEventListener('click', (e) => {
     e.stopPropagation();
     popup.remove();
-    deleteTask(taskId);
+    onConfirm();
   });
   popup.querySelector('.popup-cancel').addEventListener('click', (e) => {
     e.stopPropagation();
     popup.remove();
   });
+  return popup;
+}
+
+// ─── Task swipe delete popup ─────────────────────────────────────────────────
+
+function showTaskDeletePopup(card, taskId) {
+  card.querySelector('.goal-delete-popup')?.remove();
+  const popup = createInlinePopup('Delete task?', 'Delete', 'popup-confirm-red', () => deleteTask(taskId));
+  popup.className = 'goal-delete-popup';
   card.appendChild(popup);
 }
 
 // ─── Goal long-press delete popup ────────────────────────────────────────────
 
 function showGoalDeletePopup(card, goalId) {
-  const existing = card.querySelector('.goal-delete-popup');
-  if (existing) existing.remove();
-
-  const popup = document.createElement('div');
+  card.querySelector('.goal-delete-popup')?.remove();
+  const popup = createInlinePopup('Delete habit?', 'Delete', 'popup-confirm-red', () => deleteGoal(goalId));
   popup.className = 'goal-delete-popup';
-  popup.innerHTML = `
-    <div class="popup-inner">
-      <span class="popup-label">Delete habit?</span>
-      <button class="popup-confirm-red">Delete</button>
-      <button class="popup-cancel">Cancel</button>
-    </div>
-  `;
-  popup.querySelector('.popup-confirm-red').addEventListener('click', (e) => {
-    e.stopPropagation();
-    popup.remove();
-    deleteGoal(goalId);
-  });
-  popup.querySelector('.popup-cancel').addEventListener('click', (e) => {
-    e.stopPropagation();
-    popup.remove();
-  });
   card.appendChild(popup);
 }
 
@@ -1029,33 +1018,12 @@ function addThisWeekLongPress(card, task) {
 }
 
 function showThisWeekPopup(card, task) {
-  const existing = card.querySelector('.thisweek-popup');
-  if (existing) existing.remove();
-
-  const label = task.thisWeek ? 'Remove from This Week?' : 'Add to This Week?';
+  card.querySelector('.thisweek-popup')?.remove();
+  const label       = task.thisWeek ? 'Remove from This Week?' : 'Add to This Week?';
   const actionLabel = task.thisWeek ? 'Remove' : 'Add';
-
-  const popup = document.createElement('div');
-  popup.className = 'thisweek-popup';
   const confirmClass = task.thisWeek ? 'popup-confirm-red' : 'confirm-green';
-  popup.innerHTML = `
-    <div class="popup-inner">
-      <span class="popup-label">${label}</span>
-      <button class="${confirmClass}">${actionLabel}</button>
-      <button class="popup-cancel">Cancel</button>
-    </div>
-  `;
-
-  popup.querySelector(`.${confirmClass}`).addEventListener('click', (e) => {
-    e.stopPropagation();
-    popup.remove();
-    toggleThisWeek(task.id);
-  });
-  popup.querySelector('.popup-cancel').addEventListener('click', (e) => {
-    e.stopPropagation();
-    popup.remove();
-  });
-
+  const popup = createInlinePopup(label, actionLabel, confirmClass, () => toggleThisWeek(task.id));
+  popup.className = 'thisweek-popup';
   card.appendChild(popup);
 }
 
@@ -1073,24 +1041,8 @@ function addTaskTapPopup(card, task) {
 }
 
 function showTaskCompletePopup(card, task) {
-  const popup = document.createElement('div');
+  const popup = createInlinePopup('Complete task?', 'Complete', 'confirm-green', () => completeTask(task.id));
   popup.className = 'task-complete-popup';
-  popup.innerHTML = `
-    <div class="popup-inner">
-      <span class="popup-label">Complete task?</span>
-      <button class="confirm-green">Complete</button>
-      <button class="popup-cancel">Cancel</button>
-    </div>
-  `;
-  popup.querySelector('.confirm-green').addEventListener('click', (e) => {
-    e.stopPropagation();
-    popup.remove();
-    completeTask(task.id);
-  });
-  popup.querySelector('.popup-cancel').addEventListener('click', (e) => {
-    e.stopPropagation();
-    popup.remove();
-  });
   card.appendChild(popup);
 }
 
@@ -1252,36 +1204,14 @@ function addDataMenuLongPress(el) {
 // ─── Area delete popup ────────────────────────────────────────────────────────
 
 function showAreaDeletePopup(areaId, areaName, anchorCard) {
-  // Remove any existing popup
-  const existing = document.getElementById('area-delete-popup');
-  if (existing) existing.remove();
-
+  document.getElementById('area-delete-popup')?.remove();
   const taskCount = state.tasks.filter(t => t.areaId === areaId).length;
-
-  const popup = document.createElement('div');
+  const label = taskCount > 0
+    ? `Delete "${escapeHtml(areaName)}"? (${taskCount} task${taskCount > 1 ? 's' : ''} will be deleted)`
+    : `Delete "${escapeHtml(areaName)}"?`;
+  const popup = createInlinePopup(label, 'Delete', 'popup-confirm-red', () => deleteArea(areaId));
   popup.id = 'area-delete-popup';
   popup.className = 'area-delete-popup';
-  popup.innerHTML = `
-    <div class="popup-inner">
-      <span class="popup-label">${taskCount > 0
-        ? `Delete "${escapeHtml(areaName)}"? (${taskCount} task${taskCount > 1 ? 's' : ''} will be deleted)`
-        : `Delete "${escapeHtml(areaName)}"?`
-      }</span>
-      <button class="popup-confirm-red">Delete</button>
-      <button class="popup-cancel">Cancel</button>
-    </div>
-  `;
-
-  popup.querySelector('.popup-confirm-red').addEventListener('click', (e) => {
-    e.stopPropagation();
-    popup.remove();
-    deleteArea(areaId);
-  });
-  popup.querySelector('.popup-cancel').addEventListener('click', (e) => {
-    e.stopPropagation();
-    popup.remove();
-  });
-
   anchorCard.appendChild(popup);
 }
 
