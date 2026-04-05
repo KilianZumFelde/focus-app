@@ -159,8 +159,6 @@ body {
   right: 6px;
   top: 50%;
   transform: translateY(-50%);
-  background: none;
-  border: none;
   cursor: pointer;
   color: var(--text-muted);
   font-size: 17px;

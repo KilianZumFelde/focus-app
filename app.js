@@ -204,7 +204,7 @@ function renderSidebar() {
     btn.innerHTML = `
       <span class="area-color-dot" style="background:${area.color}"></span>
       <span class="area-name">${escapeHtml(area.name)}</span>
-      <button class="area-delete-btn" data-area-id="${area.id}" title="Delete area" tabindex="-1">×</button>
+      <span class="area-delete-btn" data-area-id="${area.id}" title="Delete area">×</span>
     `;
 
     btn.addEventListener('click', (e) => {
