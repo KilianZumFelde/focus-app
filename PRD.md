@@ -1,112 +1,113 @@
 # Product Requirements Document
-## Personal Todo List — Desktop Web App
+## focus. — Personal Task Manager
 
 ### Overview
-A minimalistic, browser-based personal task manager. Clean, spacious design inspired by Hinge —
-soft colors, lots of whitespace, intuitive without explanation.
+A minimalistic, browser-based personal task manager. Clean, spacious design —
+soft colors, lots of whitespace, intuitive without explanation. Single user, no backend, no login.
 
 ---
 
 ### Layout & Navigation
-- **Left sidebar** — always visible on desktop
-  - Special views at the top: **This Week**, **All Tasks**
-  - Areas listed below with a color dot per area
-  - A **Completed** section at the bottom of the sidebar
-  - A button to **add a new area**
-- **Main content area** — right of the sidebar, shows tasks for the selected view/area
+
+**Desktop:**
+- Left sidebar — always visible
+  - Special views at the top: **This Week**, **See All**
+  - Focus Areas listed below, each with a color dot
+  - **Completed** at the bottom of the sidebar
+  - "Add area" button
+- Main content area — right of sidebar
+
+**Mobile (≤768px):**
+- Bottom nav bar: **This Week** | **+** | **Focus Areas**
+- Areas screen — full-screen list of area cards, tappable to enter
+- Back button (←) returns to previous screen
+- "Completed ›" link in the area/all header switches to completed tasks for that area
 
 ---
 
-### Areas
-- User can create, rename, and delete areas
-- Default areas: Finances, Health, Social, Job, Misc
-- Each area is assigned a unique soft color from a predefined palette
-- Deleting an area with tasks shows a confirmation warning
+### Focus Areas
+- User can create and delete areas
+- Default areas: Career, Health, Music, Bachata, Misc
+- Each area gets a unique soft/pastel color generated via golden angle (137.5°) — works for any number of areas
+- Deleting an area that has tasks or habits shows a confirmation warning
 
 ---
 
 ### Tasks
-Each task has:
-- **Title** (short name)
-- **Description** (optional longer text)
-- **Done / Not done** status
-- **"This week"** flag — mark it to include it in the This Week view
+- Fields: title, area, "this week" flag
+- No description, no due date, no editing after creation
+- Done / not-done status
+- Tap to complete (inline popup with confirm). Completion triggers a two-step animation: green flash (~300ms) then card collapses and fades (~300ms), then moves to Completed
+- **This Week flag** — marks a task for the weekly focus view. In area view: long-press card to toggle. In This Week view: swipe left to remove from week.
+- Swipe left to delete in area and completed views
 
-### Reordering
-Tasks and goals can be reordered by dragging within the **This Week** and **area** views. Order is saved automatically.
-- Desktop: standard mouse drag
-- Mobile: hold finger for 300ms to activate, then drag. The delay prevents accidental drags while scrolling.
+---
 
-### Color coding
-- Each area has a unique soft color
-- Tasks display that color as a left border accent
-- Tasks also show a small colored area tag so you always know which area a task belongs to
-- Especially useful in the "This Week" view where tasks from multiple areas are mixed
+### Habits
+Recurring items that reset every Monday.
+
+- Fields: title, area, weekly target (number)
+- Counter tracks progress (e.g. 3 / 6). Tap card to open counter popup with +/− buttons
+- When counter reaches target: card shows as done visually, stays in the list
+- Progress bar: a thin 4px bar below the area tag fills proportional to count/target. Area color when in progress, green when done. Animates on update.
+- Reset every Monday on app open — all counters back to 0
+- Appear at the top of every view, above tasks, separated by a divider
+- Swipe left to delete
 
 ---
 
 ### Views
+
 | View | Shows |
 |---|---|
-| **This Week** | All tasks flagged "this week", across all areas, not yet done |
-| **An area** (e.g. Health) | All open tasks in that area |
-| **All Tasks** | All open tasks across all areas |
-| **Completed** | All done tasks, browseable but separate |
+| **This Week** | All habits + tasks flagged "this week", not yet done |
+| **An area** (e.g. Health) | That area's habits + open tasks |
+| **See All** | All habits + all open tasks (grouped by area) |
+| **Completed** | All done tasks (archive). On mobile: per-area completed tasks also available via "Completed ›" link |
 
 ---
 
-### Behavior
-- Completing a task triggers a two-step animation: soft green flash (~300ms) then card collapses and fades out (~300ms), then moves to Completed
-- Completed tasks are accessible but never mixed with open tasks
-- All data persists locally in the browser (localStorage — no login, no server)
-- Deleting an area warns the user if it has tasks
+### Drag-and-drop reordering
+- Available in: This Week, See All, area views
+- Not available in: Completed
+- Desktop: mouse drag via ≡ handle on the right of each card
+- Mobile: touch drag via same ≡ handle — activates instantly, no delay, no conflict with swipe or long-press
+- Order is persisted in localStorage
 
 ---
 
-### Weekly Goals
-
-Recurring tasks that reset every Monday. Separate from one-off tasks but tied to an area.
-
-**Where they appear:**
-- **This Week** — all goals across all areas, at the top above flagged tasks, separated by a divider
-- **Area views** — that area's goals at the top, above one-off tasks, separated by a divider
-- Not in: All Tasks, Completed
-
-**How they work:**
-- Each goal belongs to an area (inherits its color and tag)
-- Has a target threshold (e.g. 6) set at creation, editable later
-- Counter with `+` and `−` buttons tracks progress (e.g. 3 / 6)
-- When counter reaches target: shows as done visually, stays in the list
-- Progress bar: a thin bar (4px) below the area tag fills left-to-right proportional to count/target. Area color at high opacity when in progress, green (#3faa6e) when done. Animates width with a CSS transition. Applied when the counter popup is confirmed.
-- Every Monday on app open: all counters reset to 0 automatically
-- Created via a `+ New goal` button in This Week and area views
-- Fields: title, area, target number
+### Color coding
+- Each area has a unique procedurally generated soft color
+- Tasks and habits display a small colored area tag
+- Habit progress bar uses area color (turns green when done)
+- Especially useful in This Week and See All where items from multiple areas are mixed
 
 ---
 
-### Mobile layout (responsive)
+### Data persistence & backup
+- All data stored in browser localStorage (`focus-app-v1`)
+- No server, no account required
+- **Export** — saves a JSON file: `{ version, exportedAt, areas, tasks, habits }`
+- **Import** — restores from a JSON backup. Backward compatible with old exports using "goals" key.
+- Desktop: long-press (800ms) on "focus." title in the sidebar
+- Mobile: tap the "focus." link that appears in the main header when on the This Week view
 
-Activates at screen width ≤768px. Desktop layout unchanged above that.
+---
 
-**Bottom navigation bar:**
-- This Week — main weekly view
-- + (center button) — opens mini action menu: New task / New goal
-- Areas — opens the Areas screen
+### Weekly Review
+- On first app open of a new week (Monday): a modal shows last week's habit and task stats
+- User can choose to keep or remove unfinished tasks from This Week
 
-**Areas screen:**
-- Full-screen list of all areas, each tappable to enter that area
-- + Add area button
-- All Tasks row at the bottom (muted style — less prominent)
+---
 
-**Inside area / All Tasks views:**
-- Back button (←) returns to Areas screen
-- Open / Completed toggle to switch between active and done tasks
-
-**PWA (Progressive Web App):**
+### PWA
 - Installable on phone via browser "Add to Home Screen"
-- Works offline via service worker
-- No App Store required
+- No service worker — no offline caching
+
+---
 
 ### Out of scope (v1)
 - Due dates / calendar
 - Subtasks
+- Editing tasks or habits after creation
+- Multiple users / sync

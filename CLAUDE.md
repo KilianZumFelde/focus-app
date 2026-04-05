@@ -11,12 +11,11 @@ For mobile: host over HTTPS and install as PWA via browser "Add to Home Screen".
 
 ## PWA files
 - `manifest.json` — app name, icons, theme color
-- `service-worker.js` — caches assets for offline use
 - `icon.svg` — app icon source
 
 ## Design philosophy
 - Minimalistic, clean. Inspired by Hinge (soft colors, lots of whitespace, rounded corners)
-- Desktop layout only
+- Responsive: desktop sidebar layout above 768px, mobile bottom-nav layout at or below 768px
 - Less is more — don't add complexity that wasn't asked for
 
 ## Key concepts
@@ -39,7 +38,7 @@ For mobile: host over HTTPS and install as PWA via browser "Add to Home Screen".
 - No due dates or subtasks (out of scope for v1)
 - Drag-and-drop reordering is supported in This Week, All Tasks, and area views (mouse on desktop, touch on mobile)
 - Touch drag uses a ≡ handle on the right of each card — activates instantly with no delay, no conflict with long-press
-- Goals can be reordered across the full goal list (not scoped to area)
+- Habits can be reordered across the full habit list (not scoped to area)
 - Deleting an area with tasks shows a confirmation warning
 - Completed tasks are fully separate from active tasks
 - Task completion uses a two-step animation: green flash → collapse/fade (~300ms each), then state updates
@@ -50,5 +49,5 @@ For mobile: host over HTTPS and install as PWA via browser "Add to Home Screen".
 - "Completed ›" link appears at the right of the area/all-tasks header on mobile; back arrow returns to open tasks
 - "Clear all" button appears in the header when viewing completed tasks (desktop and mobile); confirms before deleting
 - Area cards use tap animation (80ms delay before navigation) so the press is always visible
-- Service worker uses network-first strategy so updates deploy immediately without cache bumping
-- Long-press (800ms) on "focus." title (desktop) or "This Week" bottom nav (mobile) → Export/Import data menu. Export saves a JSON backup; Import restores from a backup file. JSON includes version, exportedAt, areas, tasks, goals.
+- No service worker — removed to avoid stale cache issues. App requires a network connection.
+- Data menu (export/import): long-press (800ms) on "focus." title in the sidebar (desktop); tap the "focus." link that appears in the header on This Week view (mobile). Export saves a JSON backup; Import restores from a backup file. JSON includes version, exportedAt, areas, tasks, habits. Backward compatible with old exports that used "goals" key.
