@@ -440,7 +440,7 @@ function renderTasks() {
     taskList.appendChild(card);
   }
 
-  if (isAreaView) {
+  function appendSectionedTasks(tasks, goalsRendered) {
     const thisWeekTasks = tasks.filter(t => t.thisWeek);
     const otherTasks    = tasks.filter(t => !t.thisWeek);
 
@@ -455,23 +455,10 @@ function renderTasks() {
       }
       otherTasks.forEach(t => appendTaskCard(t, 'other'));
     }
+  }
 
-  } else if (state.currentView === 'all' && !mobileShowCompleted) {
-    const thisWeekTasks = tasks.filter(t => t.thisWeek);
-    const otherTasks    = tasks.filter(t => !t.thisWeek);
-
-    if (thisWeekTasks.length > 0) {
-      taskList.appendChild(createSectionLabel('TASKS FOR THIS WEEK'));
-      thisWeekTasks.forEach(t => appendTaskCard(t, 'thisweek'));
-    }
-
-    if (otherTasks.length > 0) {
-      if (goalsRendered || thisWeekTasks.length > 0) {
-        taskList.appendChild(createSectionLabel('TASKS'));
-      }
-      otherTasks.forEach(t => appendTaskCard(t, 'other'));
-    }
-
+  if (isAreaView || (state.currentView === 'all' && !mobileShowCompleted)) {
+    appendSectionedTasks(tasks, goalsRendered);
   } else {
     tasks.forEach(t => appendTaskCard(t, null));
   }
