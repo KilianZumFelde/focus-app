@@ -939,10 +939,13 @@ input[type="number"]:focus {
     border-radius: var(--radius);
     border-left: 4px solid #ddd;
     box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-    padding: 16px 20px;
+    padding: 20px 20px;
     margin: 0 16px 10px;
     cursor: pointer;
     transition: box-shadow 0.15s, transform 0.1s;
+    min-height: 64px;
+    display: flex;
+    align-items: center;
   }
 
   .area-screen-card:active,
@@ -968,6 +971,27 @@ input[type="number"]:focus {
 
   .area-screen-card-add .area-screen-card-name {
     color: var(--text-secondary);
+  }
+
+  /* Shared add-card style for task list bottom buttons */
+  .add-card {
+    background: none;
+    border: 1px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    width: 100%;
+    font-family: inherit;
+    transition: border-color 0.12s, color 0.12s;
+  }
+
+  .add-card:active {
+    color: var(--text-primary);
+    border-color: var(--text-muted);
   }
 
   /* ─── Bottom nav ─────────────────────────────────────── */
@@ -1163,6 +1187,29 @@ input[type="number"]:focus {
     width: 36px;
     height: 36px;
   }
+}
+
+/* ─── Area view add buttons ─────────────────────────────────────────────────── */
+.add-card {
+  background: var(--surface);
+  border: 1px dashed var(--border);
+  border-left: 4px solid transparent;
+  border-radius: var(--radius);
+  padding: 22px 20px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  width: 100%;
+  font-family: inherit;
+  transition: border-color 0.12s, color 0.12s;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.add-card:hover {
+  color: var(--text-primary);
+  border-color: var(--text-muted);
 }
 
 /* ─── Mobile: area pills selector ───────────────────────────────────────────── */

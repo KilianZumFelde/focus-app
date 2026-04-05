@@ -261,8 +261,8 @@ function renderGoals(taskList) {
       </div>
     `;
 
-    addGoalLongPress(card, goal.id);
     if (!isDone) addGoalTapPopup(card, goal);
+    if (isMobile()) addSwipeLeft(card, () => showGoalDeletePopup(card, goal.id));
     addTouchDragHandlers(card, goal.id, 'goal', card.querySelector('.drag-handle'));
     taskList.appendChild(card);
   });
@@ -292,6 +292,7 @@ function renderTasks() {
   } else if (state.currentView === 'all') {
     title = 'All Tasks';
     tasks = state.tasks.filter(t => !t.done);
+    isDraggable = true;
     addTaskBtn.classList.remove('hidden');
     addGoalBtn.classList.add('hidden');
   } else if (state.currentView === 'completed') {
@@ -428,8 +429,8 @@ function renderTasks() {
 
     if (!isCompleted) {
       card.classList.add('task-tappable');
-      addThisWeekLongPress(card, task);
       addTaskTapPopup(card, task);
+      if (isMobile()) addSwipeLeft(card, () => showThisWeekPopup(card, task));
     }
 
     if (isDraggable && !isCompleted) {
@@ -460,6 +461,19 @@ function renderTasks() {
       }
       otherTasks.forEach(t => appendTaskCard(t, 'other'));
     }
+
+    // Add task / add goal buttons at the bottom
+    const addTaskBtn = document.createElement('button');
+    addTaskBtn.className = 'add-card';
+    addTaskBtn.textContent = '+ New task';
+    addTaskBtn.addEventListener('click', () => openAddTask(state.currentView));
+    taskList.appendChild(addTaskBtn);
+
+    const addGoalBtn = document.createElement('button');
+    addGoalBtn.className = 'add-card';
+    addGoalBtn.textContent = '+ New goal';
+    addGoalBtn.addEventListener('click', () => openAddGoal(state.currentView));
+    taskList.appendChild(addGoalBtn);
   } else {
     tasks.forEach(t => appendTaskCard(t, null));
   }
@@ -576,28 +590,40 @@ function deleteGoal(id) {
 // ─── Goal modal ───────────────────────────────────────────────────────────────
 
 let editingGoalId = null;
+let fixedGoalAreaId = null;
 
 
-function openAddGoal() {
+function openAddGoal(fixedAreaId = null) {
   editingGoalId = null;
-  const defaultAreaId = getDefaultAreaId();
+  fixedGoalAreaId = fixedAreaId;
+  const defaultAreaId = fixedAreaId || getDefaultAreaId();
   document.getElementById('goal-modal-title').textContent = 'New goal';
   document.getElementById('goal-title-input').value = '';
   document.getElementById('goal-target-input').value = '1';
 
   if (isMobile()) {
-    document.getElementById('goal-area-select-group').classList.add('hidden');
-    document.getElementById('goal-area-pills-group').classList.remove('hidden');
     document.getElementById('goal-target-input-group').classList.add('hidden');
     document.getElementById('goal-target-counter-group').classList.remove('hidden');
     document.getElementById('goal-target-display').textContent = '1';
-    populateAreaPills('goal-area-pills', defaultAreaId);
+    if (fixedAreaId) {
+      document.getElementById('goal-area-select-group').classList.add('hidden');
+      document.getElementById('goal-area-pills-group').classList.add('hidden');
+    } else {
+      document.getElementById('goal-area-select-group').classList.add('hidden');
+      document.getElementById('goal-area-pills-group').classList.remove('hidden');
+      populateAreaPills('goal-area-pills', defaultAreaId);
+    }
   } else {
-    document.getElementById('goal-area-select-group').classList.remove('hidden');
-    document.getElementById('goal-area-pills-group').classList.add('hidden');
     document.getElementById('goal-target-input-group').classList.remove('hidden');
     document.getElementById('goal-target-counter-group').classList.add('hidden');
-    populateAreaSelect('goal-area-select', defaultAreaId);
+    if (fixedAreaId) {
+      document.getElementById('goal-area-select-group').classList.add('hidden');
+      document.getElementById('goal-area-pills-group').classList.add('hidden');
+    } else {
+      document.getElementById('goal-area-select-group').classList.remove('hidden');
+      document.getElementById('goal-area-pills-group').classList.add('hidden');
+      populateAreaSelect('goal-area-select', defaultAreaId);
+    }
   }
 
   document.getElementById('goal-modal').classList.remove('hidden');
@@ -619,6 +645,7 @@ function openEditGoal(id) {
 function closeGoalModal() {
   document.getElementById('goal-modal').classList.add('hidden');
   editingGoalId = null;
+  fixedGoalAreaId = null;
 }
 
 function saveGoal() {
@@ -628,7 +655,7 @@ function saveGoal() {
     : parseInt(document.getElementById('goal-target-input').value, 10);
   if (!title) { document.getElementById('goal-title-input').focus(); return; }
   if (!target || target < 1) { document.getElementById('goal-target-input').focus(); return; }
-  const areaId = isMobile() ? getSelectedAreaPill('goal-area-pills') : document.getElementById('goal-area-select').value;
+  const areaId = fixedGoalAreaId || (isMobile() ? getSelectedAreaPill('goal-area-pills') : document.getElementById('goal-area-select').value);
 
   if (editingGoalId) {
     const goal = state.goals.find(g => g.id === editingGoalId);
@@ -824,6 +851,7 @@ function addTouchDragHandlers(card, itemId, type, handle, section = null) {
 // ─── Task modal ───────────────────────────────────────────────────────────────
 
 let editingTaskId = null;
+let fixedTaskAreaId = null;
 
 function populateAreaSelect(selectId, selectedAreaId) {
   const select = document.getElementById(selectId);
@@ -856,30 +884,102 @@ function getSelectedAreaPill(containerId) {
   return selected ? selected.dataset.areaId : (state.areas[0]?.id || null);
 }
 
-function openAddTask() {
+// ─── Swipe left to action ────────────────────────────────────────────────────
+
+function addSwipeLeft(card, onSwipe) {
+  let startX = 0;
+  let startY = 0;
+  let swiping = false;
+  let swipeCommitted = false;
+  const THRESHOLD = 60;
+
+  card.addEventListener('touchstart', (e) => {
+    if (e.target.closest('.drag-handle')) return;
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    swiping = false;
+    swipeCommitted = false;
+  }, { passive: true });
+
+  card.addEventListener('touchmove', (e) => {
+    if (e.target.closest('.drag-handle')) return;
+    const dx = e.touches[0].clientX - startX;
+    const dy = e.touches[0].clientY - startY;
+
+    // Determine direction on first meaningful move
+    if (!swiping && Math.abs(dx) < 5 && Math.abs(dy) < 5) return;
+
+    if (!swiping) {
+      // If more vertical than horizontal, not a swipe — bail
+      if (Math.abs(dy) > Math.abs(dx)) return;
+      swiping = true;
+    }
+
+    if (dx < 0) {
+      e.preventDefault();
+      const clamped = Math.max(dx, -THRESHOLD * 1.5);
+      card.style.transform = `translateX(${clamped}px)`;
+      card.style.transition = 'none';
+    }
+  }, { passive: false });
+
+  card.addEventListener('touchend', (e) => {
+    if (!swiping) return;
+    const dx = e.changedTouches[0].clientX - startX;
+
+    card.style.transition = 'transform 0.2s ease';
+    card.style.transform = 'translateX(0)';
+
+    if (dx < -THRESHOLD && !swipeCommitted) {
+      swipeCommitted = true;
+      // Small delay so snap-back is visible before popup appears
+      setTimeout(() => onSwipe(), 150);
+    }
+
+    swiping = false;
+  });
+
+  card.addEventListener('touchcancel', () => {
+    card.style.transition = 'transform 0.2s ease';
+    card.style.transform = 'translateX(0)';
+    swiping = false;
+  });
+}
+
+function openAddTask(fixedAreaId = null) {
   editingTaskId = null;
-  const defaultAreaId = getDefaultAreaId();
+  fixedTaskAreaId = fixedAreaId;
+  const defaultAreaId = fixedAreaId || getDefaultAreaId();
   const defaultThisWeek = state.currentView === 'this-week';
 
   document.getElementById('modal-title').textContent = 'New task';
   document.getElementById('task-title-input').value = '';
 
   if (isMobile()) {
-    document.getElementById('task-area-select-group').classList.add('hidden');
-    document.getElementById('task-area-pills-group').classList.remove('hidden');
     document.getElementById('task-thisweek-check-group').classList.add('hidden');
     document.getElementById('task-thisweek-toggle-group').classList.remove('hidden');
-    populateAreaPills('task-area-pills', defaultAreaId);
-    // Set toggle state
     document.getElementById('toggle-this-week').classList.toggle('selected', defaultThisWeek);
     document.getElementById('toggle-later').classList.toggle('selected', !defaultThisWeek);
+    if (fixedAreaId) {
+      document.getElementById('task-area-select-group').classList.add('hidden');
+      document.getElementById('task-area-pills-group').classList.add('hidden');
+    } else {
+      document.getElementById('task-area-select-group').classList.add('hidden');
+      document.getElementById('task-area-pills-group').classList.remove('hidden');
+      populateAreaPills('task-area-pills', defaultAreaId);
+    }
   } else {
-    document.getElementById('task-area-select-group').classList.remove('hidden');
-    document.getElementById('task-area-pills-group').classList.add('hidden');
     document.getElementById('task-thisweek-check-group').classList.remove('hidden');
     document.getElementById('task-thisweek-toggle-group').classList.add('hidden');
     document.getElementById('task-thisweek-check').checked = defaultThisWeek;
-    populateAreaSelect('task-area-select', defaultAreaId);
+    if (fixedAreaId) {
+      document.getElementById('task-area-select-group').classList.add('hidden');
+      document.getElementById('task-area-pills-group').classList.add('hidden');
+    } else {
+      document.getElementById('task-area-select-group').classList.remove('hidden');
+      document.getElementById('task-area-pills-group').classList.add('hidden');
+      populateAreaSelect('task-area-select', defaultAreaId);
+    }
   }
 
   document.getElementById('task-modal').classList.remove('hidden');
@@ -890,6 +990,7 @@ function openAddTask() {
 function closeTaskModal() {
   document.getElementById('task-modal').classList.add('hidden');
   editingTaskId = null;
+  fixedTaskAreaId = null;
 }
 
 function saveTask() {
@@ -899,7 +1000,7 @@ function saveTask() {
     return;
   }
 
-  const areaId   = isMobile() ? getSelectedAreaPill('task-area-pills') : document.getElementById('task-area-select').value;
+  const areaId   = fixedTaskAreaId || (isMobile() ? getSelectedAreaPill('task-area-pills') : document.getElementById('task-area-select').value);
   const thisWeek = isMobile()
     ? document.getElementById('toggle-this-week').classList.contains('selected')
     : document.getElementById('task-thisweek-check').checked;
@@ -929,49 +1030,29 @@ function saveTask() {
 
 // ─── Goal long-press delete popup ────────────────────────────────────────────
 
-function addGoalLongPress(card, goalId) {
-  let holdTimer = null;
+function showGoalDeletePopup(card, goalId) {
+  const existing = card.querySelector('.goal-delete-popup');
+  if (existing) existing.remove();
 
-  card.addEventListener('touchstart', (e) => {
-    if (e.target.closest('.drag-handle')) return;
-    card._longPressActive = false;
-    holdTimer = setTimeout(() => {
-      holdTimer = null;
-      card._longPressActive = true;
-      const existing = card.querySelector('.goal-delete-popup');
-      if (existing) existing.remove();
-
-      const popup = document.createElement('div');
-      popup.className = 'goal-delete-popup';
-      popup.innerHTML = `
-        <div class="area-delete-popup-inner">
-          <span class="area-delete-label">Delete goal?</span>
-          <button class="area-delete-confirm">Delete</button>
-          <button class="area-delete-cancel">Cancel</button>
-        </div>
-      `;
-      popup.querySelector('.area-delete-confirm').addEventListener('click', (e) => {
-        e.stopPropagation();
-        popup.remove();
-        deleteGoal(goalId);
-      });
-      popup.querySelector('.area-delete-cancel').addEventListener('click', (e) => {
-        e.stopPropagation();
-        popup.remove();
-      });
-      card.appendChild(popup);
-    }, 600);
-  }, { passive: true });
-
-  card.addEventListener('touchend', () => {
-    if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
+  const popup = document.createElement('div');
+  popup.className = 'goal-delete-popup';
+  popup.innerHTML = `
+    <div class="area-delete-popup-inner">
+      <span class="area-delete-label">Delete goal?</span>
+      <button class="area-delete-confirm">Delete</button>
+      <button class="area-delete-cancel">Cancel</button>
+    </div>
+  `;
+  popup.querySelector('.area-delete-confirm').addEventListener('click', (e) => {
+    e.stopPropagation();
+    popup.remove();
+    deleteGoal(goalId);
   });
-  card.addEventListener('touchcancel', () => {
-    if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
+  popup.querySelector('.area-delete-cancel').addEventListener('click', (e) => {
+    e.stopPropagation();
+    popup.remove();
   });
-  card.addEventListener('touchmove', () => {
-    if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
-  }, { passive: true });
+  card.appendChild(popup);
 }
 
 // ─── This Week long-press popup ──────────────────────────────────────────────
@@ -1325,20 +1406,7 @@ function renderAreasScreen() {
       }, 80);
     });
 
-    // Long-press to delete (600ms hold)
-    let holdTimer = null;
-    card.addEventListener('touchstart', () => {
-      holdTimer = setTimeout(() => {
-        holdTimer = null;
-        showAreaDeletePopup(area.id, area.name, card);
-      }, 600);
-    }, { passive: true });
-    card.addEventListener('touchend', () => {
-      if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
-    });
-    card.addEventListener('touchcancel', () => {
-      if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
-    });
+    addSwipeLeft(card, () => showAreaDeletePopup(area.id, area.name, card));
 
     list.appendChild(card);
   });
