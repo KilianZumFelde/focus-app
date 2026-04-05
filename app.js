@@ -220,6 +220,7 @@ function renderSidebar() {
 
 function getGoalsForView() {
   if (state.currentView === 'this-week') return state.goals;
+  if (state.currentView === 'all') return state.goals;
   if (state.areas.find(a => a.id === state.currentView)) {
     return state.goals.filter(g => g.areaId === state.currentView);
   }
@@ -288,7 +289,7 @@ function renderTasks() {
     isDraggable = true;
     addNewBtn.classList.remove('hidden');
   } else if (state.currentView === 'all') {
-    title = 'All Tasks';
+    title = 'All Tasks & Goals';
     tasks = state.tasks.filter(t => !t.done);
     isDraggable = true;
     addNewBtn.classList.remove('hidden');
@@ -375,7 +376,7 @@ function renderTasks() {
 
   const goalsRendered = renderGoals(taskList);
 
-  if (goalsRendered && tasks.length > 0 && !state.areas.find(a => a.id === state.currentView)) {
+  if (goalsRendered && tasks.length > 0 && !state.areas.find(a => a.id === state.currentView) && state.currentView !== 'all') {
     const tasksLabel = document.createElement('span');
     tasksLabel.className = 'section-label';
     tasksLabel.textContent = 'TASKS';
@@ -414,18 +415,25 @@ function renderTasks() {
           <div class="task-title">${escapeHtml(task.title)}</div>
           <div class="task-meta">${buildAreaTag(area)}</div>
         </div>
-        ${isCompleted ? `
-          <div class="task-card-actions">
-            <button class="action-btn delete-btn" data-task-id="${task.id}" title="Delete permanently">×</button>
-          </div>
-        ` : isDraggable ? '<div class="drag-handle"></div>' : ''}
+        ${!isCompleted && isDraggable ? '<div class="drag-handle"></div>' : ''}
       </div>
     `;
 
-    if (!isCompleted) {
+    if (isCompleted) {
+      if (isMobile()) addSwipeLeft(card, () => showTaskDeletePopup(card, task.id));
+    } else {
       card.classList.add('task-tappable');
       addTaskTapPopup(card, task);
-      if (isMobile()) addSwipeLeft(card, () => showThisWeekPopup(card, task));
+      if (isMobile()) {
+        if (isAreaView && !task.thisWeek) {
+          // Area view, not in week: swipe = delete, hold = add to week
+          addSwipeLeft(card, () => showTaskDeletePopup(card, task.id));
+          addThisWeekLongPress(card, task);
+        } else {
+          // This Week view or already-in-week task: swipe = remove from week
+          addSwipeLeft(card, () => showThisWeekPopup(card, task));
+        }
+      }
     }
 
     if (isDraggable && !isCompleted) {
@@ -457,13 +465,31 @@ function renderTasks() {
       otherTasks.forEach(t => appendTaskCard(t, 'other'));
     }
 
+  } else if (state.currentView === 'all' && !mobileShowCompleted) {
+    const thisWeekTasks = tasks.filter(t => t.thisWeek);
+    const otherTasks    = tasks.filter(t => !t.thisWeek);
+
+    if (thisWeekTasks.length > 0) {
+      const label = document.createElement('span');
+      label.className = 'section-label';
+      label.textContent = 'TASKS FOR THIS WEEK';
+      taskList.appendChild(label);
+      thisWeekTasks.forEach(t => appendTaskCard(t, 'thisweek'));
+    }
+
+    if (otherTasks.length > 0) {
+      if (goalsRendered || thisWeekTasks.length > 0) {
+        const label = document.createElement('span');
+        label.className = 'section-label';
+        label.textContent = 'TASKS';
+        taskList.appendChild(label);
+      }
+      otherTasks.forEach(t => appendTaskCard(t, 'other'));
+    }
+
   } else {
     tasks.forEach(t => appendTaskCard(t, null));
   }
-
-  taskList.querySelectorAll('.delete-btn').forEach(btn => {
-    btn.addEventListener('click', () => deleteTask(btn.dataset.taskId));
-  });
 }
 
 // ─── Full render ──────────────────────────────────────────────────────────────
@@ -950,6 +976,33 @@ function addSwipeLeft(card, onSwipe) {
   });
 }
 
+
+// ─── Task swipe delete popup ─────────────────────────────────────────────────
+
+function showTaskDeletePopup(card, taskId) {
+  const existing = card.querySelector('.goal-delete-popup');
+  if (existing) existing.remove();
+
+  const popup = document.createElement('div');
+  popup.className = 'goal-delete-popup';
+  popup.innerHTML = `
+    <div class="area-delete-popup-inner">
+      <span class="area-delete-label">Delete task?</span>
+      <button class="area-delete-confirm">Delete</button>
+      <button class="area-delete-cancel">Cancel</button>
+    </div>
+  `;
+  popup.querySelector('.area-delete-confirm').addEventListener('click', (e) => {
+    e.stopPropagation();
+    popup.remove();
+    deleteTask(taskId);
+  });
+  popup.querySelector('.area-delete-cancel').addEventListener('click', (e) => {
+    e.stopPropagation();
+    popup.remove();
+  });
+  card.appendChild(popup);
+}
 
 // ─── Goal long-press delete popup ────────────────────────────────────────────
 

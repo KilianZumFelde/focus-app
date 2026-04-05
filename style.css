@@ -852,6 +852,10 @@ input[type="number"]:focus {
     flex: 1;
   }
 
+  .header-actions {
+    display: none;
+  }
+
   /* Back button: fixed bottom-right above the nav bar */
   .back-btn {
     position: fixed;
