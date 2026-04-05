@@ -36,7 +36,7 @@ const DEFAULT_STATE = {
     { id: 'a5', name: 'Misc',    color: generateAreaColor(4) },
   ],
   tasks: [],
-  goals: [],
+  habits: [],
   currentView: 'this-week',
 };
 
@@ -51,12 +51,17 @@ function loadState() {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       const parsed = JSON.parse(saved);
+      // Migration: rename goals → habits (data saved before this rename used "goals")
+      if (parsed.goals && !parsed.habits) {
+        parsed.habits = parsed.goals;
+        delete parsed.goals;
+      }
       state = { ...DEFAULT_STATE, ...parsed };
     }
   } catch (e) {
     state = JSON.parse(JSON.stringify(DEFAULT_STATE));
   }
-  weeklyReviewStats = resetGoalsIfNewWeek();
+  weeklyReviewStats = resetHabitsIfNewWeek();
 }
 
 function saveState() {
@@ -77,40 +82,40 @@ function getCurrentWeekKey() {
   return monday.toISOString().slice(0, 10);
 }
 
-function resetGoalsIfNewWeek() {
+function resetHabitsIfNewWeek() {
   const weekKey = getCurrentWeekKey();
   let changed = false;
   let stats = null;
 
-  const needsReset = state.goals.some(g => g.lastResetWeek !== weekKey);
+  const needsReset = state.habits.some(g => g.lastResetWeek !== weekKey);
   const alreadyShown = localStorage.getItem(WEEKLY_REVIEW_KEY) === weekKey;
 
   if (needsReset || DEBUG_WEEKLY_REVIEW) {
     // Capture last week's stats before resetting
-    const totalGoals = state.goals.length;
-    const accomplishedGoals = state.goals.filter(g => g.count >= g.target).length;
+    const totalHabits = state.habits.length;
+    const accomplishedHabits = state.habits.filter(g => g.count >= g.target).length;
     const thisWeekTasks = state.tasks.filter(t => t.thisWeek && !t.done);
     const thisWeekTasksDone = state.tasks.filter(t => t.thisWeek && t.done).length;
     const thisWeekTasksTotal = thisWeekTasks.length + thisWeekTasksDone;
     const incompleteThisWeekIds = thisWeekTasks.map(t => t.id);
 
-    const hasSomethingToShow = totalGoals > 0 || thisWeekTasksTotal > 0;
+    const hasSomethingToShow = totalHabits > 0 || thisWeekTasksTotal > 0;
 
     if (hasSomethingToShow && (!alreadyShown || DEBUG_WEEKLY_REVIEW)) {
       stats = {
-        accomplishedGoals,
-        totalGoals,
+        accomplishedHabits,
+        totalHabits,
         thisWeekTasksDone,
         thisWeekTasksTotal,
         incompleteThisWeekIds,
       };
     }
 
-    // Reset goals
-    state.goals.forEach(goal => {
-      if (goal.lastResetWeek !== weekKey) {
-        goal.count = 0;
-        goal.lastResetWeek = weekKey;
+    // Reset habits
+    state.habits.forEach(habit => {
+      if (habit.lastResetWeek !== weekKey) {
+        habit.count = 0;
+        habit.lastResetWeek = weekKey;
         changed = true;
       }
     });
@@ -236,58 +241,58 @@ function renderSidebar() {
   });
 }
 
-// ─── Render: goals ───────────────────────────────────────────────────────────
+// ─── Render: habits ──────────────────────────────────────────────────────────
 
-function getGoalsForView() {
-  if (state.currentView === 'this-week' || state.currentView === 'all') return state.goals;
+function getHabitsForView() {
+  if (state.currentView === 'this-week' || state.currentView === 'all') return state.habits;
   if (state.areas.find(a => a.id === state.currentView)) {
-    return state.goals.filter(g => g.areaId === state.currentView);
+    return state.habits.filter(g => g.areaId === state.currentView);
   }
   return [];
 }
 
-function renderGoals(taskList, prevProgressWidths = new Map()) {
-  const goals = getGoalsForView();
-  if (goals.length === 0) return false;
+function renderHabits(taskList, prevProgressWidths = new Map()) {
+  const habits = getHabitsForView();
+  if (habits.length === 0) return false;
 
   const isLabelledView = state.currentView === 'this-week' || state.areas.find(a => a.id === state.currentView);
   if (isLabelledView) {
     taskList.appendChild(createSectionLabel('HABITS'));
   }
 
-  goals.forEach(goal => {
-    const area = state.areas.find(a => a.id === goal.areaId);
+  habits.forEach(habit => {
+    const area = state.areas.find(a => a.id === habit.areaId);
     const { borderColor } = getAreaColors(area);
-    const isDone = goal.count >= goal.target;
+    const isDone = habit.count >= habit.target;
 
     const card = document.createElement('div');
-    card.className = 'goal-card' + (isDone ? ' goal-done' : '');
+    card.className = 'habit-card' + (isDone ? ' habit-done' : '');
     card.style.borderLeftColor = borderColor;
-    card.dataset.goalId = goal.id;
+    card.dataset.habitId = habit.id;
 
-    const progress = goal.target > 0 ? Math.min(goal.count / goal.target, 1) : 0;
+    const progress = habit.target > 0 ? Math.min(habit.count / habit.target, 1) : 0;
     const fillColor = isDone ? COLOR_SUCCESS : (area ? area.color.replace(/^hsl\((.+)\)$/, 'hsla($1, 0.8)') : 'transparent');
 
     card.innerHTML = `
-      <div class="goal-card-main">
-        <div class="goal-card-content">
-          <div class="goal-title-row">
-            <span class="goal-title">${escapeHtml(goal.title)}</span>
+      <div class="habit-card-main">
+        <div class="habit-card-content">
+          <div class="habit-title-row">
+            <span class="habit-title">${escapeHtml(habit.title)}</span>
           </div>
           <div class="task-meta">${buildAreaTag(area)}</div>
         </div>
-        <span class="counter-display${isDone ? ' counter-done' : ''}">${isDone ? '✓ ' : ''}${goal.count} / ${goal.target}</span>
+        <span class="counter-display${isDone ? ' counter-done' : ''}">${isDone ? '✓ ' : ''}${habit.count} / ${habit.target}</span>
         <div class="drag-handle"></div>
       </div>
       <div class="habit-progress-bar">
-        <div class="habit-progress-fill" style="width:${prevProgressWidths.get(goal.id) ?? `${Math.round(progress * 100)}%`};background:${fillColor}"></div>
+        <div class="habit-progress-fill" style="width:${prevProgressWidths.get(habit.id) ?? `${Math.round(progress * 100)}%`};background:${fillColor}"></div>
       </div>
     `;
 
-    if (!isDone) addGoalTapPopup(card, goal);
-    if (isMobile()) addSwipeLeft(card, () => showGoalDeletePopup(card, goal.id));
-    if (!isMobile()) addDragHandlers(card, goal.id, 'goal');
-    addTouchDragHandlers(card, goal.id, 'goal', card.querySelector('.drag-handle'));
+    if (!isDone) addHabitTapPopup(card, habit);
+    if (isMobile()) addSwipeLeft(card, () => showHabitDeletePopup(card, habit.id));
+    if (!isMobile()) addDragHandlers(card, habit.id, 'habit');
+    addTouchDragHandlers(card, habit.id, 'habit', card.querySelector('.drag-handle'));
     taskList.appendChild(card);
     requestAnimationFrame(() => {
       card.querySelector('.habit-progress-fill').style.width = `${Math.round(progress * 100)}%`;
@@ -397,20 +402,20 @@ function renderTasks() {
   }
 
   const prevProgressWidths = new Map();
-  taskList.querySelectorAll('.goal-card[data-goal-id]').forEach(card => {
+  taskList.querySelectorAll('.habit-card[data-habit-id]').forEach(card => {
     const fill = card.querySelector('.habit-progress-fill');
-    if (fill) prevProgressWidths.set(card.dataset.goalId, fill.style.width);
+    if (fill) prevProgressWidths.set(card.dataset.habitId, fill.style.width);
   });
 
   taskList.innerHTML = '';
 
-  const goalsRendered = renderGoals(taskList, prevProgressWidths);
+  const habitsRendered = renderHabits(taskList, prevProgressWidths);
 
-  if (goalsRendered && tasks.length > 0 && !state.areas.find(a => a.id === state.currentView) && state.currentView !== 'all') {
+  if (habitsRendered && tasks.length > 0 && !state.areas.find(a => a.id === state.currentView) && state.currentView !== 'all') {
     taskList.appendChild(createSectionLabel('TASKS'));
   }
 
-  if (!goalsRendered && tasks.length === 0) {
+  if (!habitsRendered && tasks.length === 0) {
     const area = state.areas.find(a => a.id === state.currentView);
     const emptyText = state.currentView === 'this-week'
       ? 'Nothing planned for this week.'
@@ -470,7 +475,7 @@ function renderTasks() {
     taskList.appendChild(card);
   }
 
-  function appendSectionedTasks(tasks, goalsRendered) {
+  function appendSectionedTasks(tasks, habitsRendered) {
     const thisWeekTasks = tasks.filter(t => t.thisWeek);
     const otherTasks    = tasks.filter(t => !t.thisWeek);
 
@@ -480,7 +485,7 @@ function renderTasks() {
     }
 
     if (otherTasks.length > 0) {
-      if (goalsRendered || thisWeekTasks.length > 0) {
+      if (habitsRendered || thisWeekTasks.length > 0) {
         taskList.appendChild(createSectionLabel('TASKS'));
       }
       otherTasks.forEach(t => appendTaskCard(t, 'other'));
@@ -488,7 +493,7 @@ function renderTasks() {
   }
 
   if (isAreaView || (state.currentView === 'all' && !mobileShowCompleted)) {
-    appendSectionedTasks(tasks, goalsRendered);
+    appendSectionedTasks(tasks, habitsRendered);
   } else {
     tasks.forEach(t => appendTaskCard(t, null));
   }
@@ -578,24 +583,24 @@ function deleteArea(id) {
   commit();
 }
 
-// ─── Goal operations ──────────────────────────────────────────────────────────
+// ─── Habit operations ─────────────────────────────────────────────────────────
 
-function incrementGoal(id) {
-  const goal = state.goals.find(g => g.id === id);
-  if (!goal) return;
-  goal.count += 1;
+function incrementHabit(id) {
+  const habit = state.habits.find(g => g.id === id);
+  if (!habit) return;
+  habit.count += 1;
   commit();
 }
 
-function decrementGoal(id) {
-  const goal = state.goals.find(g => g.id === id);
-  if (!goal || goal.count <= 0) return;
-  goal.count -= 1;
+function decrementHabit(id) {
+  const habit = state.habits.find(g => g.id === id);
+  if (!habit || habit.count <= 0) return;
+  habit.count -= 1;
   commit();
 }
 
-function deleteGoal(id) {
-  state.goals = state.goals.filter(g => g.id !== id);
+function deleteHabit(id) {
+  state.habits = state.habits.filter(g => g.id !== id);
   commit();
 }
 
@@ -664,15 +669,15 @@ function saveNew() {
   const title = document.getElementById('new-title-input').value.trim();
   if (!title) { document.getElementById('new-title-input').focus(); return; }
 
-  const isGoal = getNewToggle() === 'habit';
+  const isHabit = getNewToggle() === 'habit';
   const areaId = preselectedAreaId || (isMobile() ? getSelectedAreaPill('new-area-pills') : document.getElementById('new-area-select').value);
 
-  if (isGoal) {
+  if (isHabit) {
     const target = isMobile()
       ? parseInt(document.getElementById('new-target-display').textContent, 10)
       : parseInt(document.getElementById('new-target-input').value, 10);
     if (!target || target < 1) return;
-    state.goals.push({
+    state.habits.push({
       id: generateId(),
       title,
       areaId,
@@ -744,7 +749,7 @@ function addDragHandlers(card, itemId, type = 'task', section = null) {
     if (section && card.dataset.section !== section) return;
     const insertBefore = card.classList.contains('drag-over-top');
     card.classList.remove('drag-over-top', 'drag-over-bottom');
-    if (type === 'goal') reorderGoal(draggingItemId, itemId, insertBefore);
+    if (type === 'habit') reorderHabit(draggingItemId, itemId, insertBefore);
     else reorderTask(draggingItemId, itemId, insertBefore);
   });
 }
@@ -763,8 +768,8 @@ function reorderTask(fromId, toId, insertBefore) {
   reorderItem(state.tasks, fromId, toId, insertBefore);
 }
 
-function reorderGoal(fromId, toId, insertBefore) {
-  reorderItem(state.goals, fromId, toId, insertBefore);
+function reorderHabit(fromId, toId, insertBefore) {
+  reorderItem(state.habits, fromId, toId, insertBefore);
 }
 
 // ─── Touch drag-and-drop ──────────────────────────────────────────────────────
@@ -777,7 +782,7 @@ function addTouchDragHandlers(card, itemId, type, handle, section = null) {
   function getCards() {
     const all = type === 'task'
       ? [...document.querySelectorAll('.task-card[data-task-id]')]
-      : [...document.querySelectorAll('.goal-card[data-goal-id]')];
+      : [...document.querySelectorAll('.habit-card[data-habit-id]')];
     return section ? all.filter(c => c.dataset.section === section) : all;
   }
 
@@ -829,10 +834,10 @@ function addTouchDragHandlers(card, itemId, type, handle, section = null) {
     const el = document.elementFromPoint(touch.clientX, touch.clientY);
     clone.style.display = '';
 
-    const targetCard = el && el.closest(type === 'task' ? '.task-card' : '.goal-card');
+    const targetCard = el && el.closest(type === 'task' ? '.task-card' : '.habit-card');
     const targetId   = targetCard && (type === 'task'
       ? targetCard.dataset.taskId
-      : targetCard.dataset.goalId);
+      : targetCard.dataset.habitId);
 
     if (targetCard && targetId && targetId !== itemId) {
       lastTarget = { id: targetId, card: targetCard };
@@ -857,7 +862,7 @@ function addTouchDragHandlers(card, itemId, type, handle, section = null) {
       if (type === 'task') {
         reorderTask(itemId, lastTarget.id, insertBefore);
       } else {
-        reorderGoal(itemId, lastTarget.id, insertBefore);
+        reorderHabit(itemId, lastTarget.id, insertBefore);
       }
     }
 
@@ -1014,12 +1019,12 @@ function showTaskDeletePopup(card, taskId) {
   card.appendChild(popup);
 }
 
-// ─── Goal long-press delete popup ────────────────────────────────────────────
+// ─── Habit swipe delete popup ─────────────────────────────────────────────────
 
-function showGoalDeletePopup(card, goalId) {
-  card.querySelector('.goal-delete-popup')?.remove();
-  const popup = createInlinePopup('Delete habit?', 'Delete', 'popup-confirm-red', () => deleteGoal(goalId));
-  popup.className = 'goal-delete-popup';
+function showHabitDeletePopup(card, habitId) {
+  card.querySelector('.habit-delete-popup')?.remove();
+  const popup = createInlinePopup('Delete habit?', 'Delete', 'popup-confirm-red', () => deleteHabit(habitId));
+  popup.className = 'habit-delete-popup';
   card.appendChild(popup);
 }
 
@@ -1064,34 +1069,34 @@ function showTaskCompletePopup(card, task) {
   card.appendChild(popup);
 }
 
-// ─── Goal tap popup (counter) ─────────────────────────────────────────────────
+// ─── Habit tap popup (counter) ────────────────────────────────────────────────
 
-function addGoalTapPopup(card, goal) {
+function addHabitTapPopup(card, habit) {
   card.addEventListener('click', (e) => {
     if (e.target.closest('.drag-handle')) return;
-    if (e.target.closest('.goal-delete-popup')) return;
-    if (e.target.closest('.goal-counter-popup')) return;
+    if (e.target.closest('.habit-delete-popup')) return;
+    if (e.target.closest('.habit-counter-popup')) return;
     if (card._longPressActive) { card._longPressActive = false; return; }
-    if (card.querySelector('.goal-counter-popup')) return;
-    showGoalCounterPopup(card, goal);
+    if (card.querySelector('.habit-counter-popup')) return;
+    showHabitCounterPopup(card, habit);
   });
 }
 
-function showGoalCounterPopup(card, goal) {
+function showHabitCounterPopup(card, habit) {
   const popup = document.createElement('div');
-  popup.className = 'goal-counter-popup';
+  popup.className = 'habit-counter-popup';
 
-  function getGoal() { return state.goals.find(g => g.id === goal.id); }
+  function getHabit() { return state.habits.find(g => g.id === habit.id); }
 
   function updateDisplay() {
-    const g = getGoal();
+    const g = getHabit();
     if (!g) return;
     popup.querySelector('.popup-count').textContent = `${g.count} / ${g.target}`;
     popup.querySelector('.popup-decrement').disabled = g.count <= 0;
     popup.querySelector('.popup-increment').disabled = g.count >= g.target;
   }
 
-  const g = getGoal();
+  const g = getHabit();
   if (!g) return;
   popup.innerHTML = `
     <div class="popup-inner">
@@ -1104,12 +1109,12 @@ function showGoalCounterPopup(card, goal) {
 
   popup.querySelector('.popup-decrement').addEventListener('click', (e) => {
     e.stopPropagation();
-    const g = getGoal();
+    const g = getHabit();
     if (g && g.count > 0) { g.count--; saveState(); updateDisplay(); }
   });
   popup.querySelector('.popup-increment').addEventListener('click', (e) => {
     e.stopPropagation();
-    const g = getGoal();
+    const g = getHabit();
     if (g && g.count < g.target) { g.count++; saveState(); updateDisplay(); }
   });
   popup.querySelector('.confirm-green').addEventListener('click', (e) => {
@@ -1124,8 +1129,8 @@ function showGoalCounterPopup(card, goal) {
 // ─── Weekly review modal ──────────────────────────────────────────────────────
 
 function showWeeklyReviewModal(stats) {
-  document.getElementById('weekly-goals-stat').textContent =
-    `${stats.accomplishedGoals} / ${stats.totalGoals}`;
+  document.getElementById('weekly-habits-stat').textContent =
+    `${stats.accomplishedHabits} / ${stats.totalHabits}`;
   document.getElementById('weekly-tasks-stat').textContent =
     `${stats.thisWeekTasksDone} / ${stats.thisWeekTasksTotal}`;
 
@@ -1169,7 +1174,7 @@ function exportData() {
     exportedAt: new Date().toISOString(),
     areas: state.areas,
     tasks: state.tasks,
-    goals: state.goals,
+    habits: state.habits,
   };
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
@@ -1186,14 +1191,14 @@ function importData(file) {
   reader.onload = (e) => {
     try {
       const data = JSON.parse(e.target.result);
-      if (!data.areas || !data.tasks || !data.goals) {
+      if (!data.areas || !data.tasks || !(data.habits || data.goals)) {
         alert('Invalid backup file.');
         return;
       }
       if (!confirm(`This will replace all your current data with the backup from ${data.exportedAt ? data.exportedAt.slice(0,10) : 'unknown date'}. Continue?`)) return;
       state.areas = data.areas;
       state.tasks = data.tasks;
-      state.goals = data.goals;
+      state.habits = data.habits || data.goals; // data.goals: backward compat with old backups
       commit();
       closeDataMenu();
     } catch {

@@ -353,7 +353,7 @@ body {
   display: none !important;
 }
 
-/* ─── Section divider and labels (goals / tasks) ────────────────────────────── */
+/* ─── Section divider and labels (habits / tasks) ───────────────────────────── */
 .section-divider {
   height: 1px;
   background: var(--border);
@@ -371,8 +371,8 @@ body {
   margin: 4px 0 10px;
 }
 
-/* ─── Goal card ─────────────────────────────────────────────────────────────── */
-.goal-card {
+/* ─── Habit card ────────────────────────────────────────────────────────────── */
+.habit-card {
   position: relative;
   background: var(--surface);
   border-radius: var(--radius);
@@ -382,11 +382,11 @@ body {
   transition: box-shadow 0.15s;
 }
 
-.goal-card:hover {
+.habit-card:hover {
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.09);
 }
 
-.goal-card-main {
+.habit-card-main {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -405,16 +405,16 @@ body {
   transition: width 0.55s ease;
 }
 
-.goal-card-content {
+.habit-card-content {
   flex: 1;
   min-width: 0;
 }
 
-.goal-title-row {
+.habit-title-row {
   margin-bottom: 6px;
 }
 
-.goal-title {
+.habit-title {
   font-size: 15px;
   font-weight: 500;
   color: var(--text-primary);
@@ -425,7 +425,7 @@ body {
 
 
 /* Counter */
-.goal-counter {
+.habit-counter {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -468,7 +468,7 @@ body {
   letter-spacing: 0.3px;
 }
 
-.goal-card.goal-done .counter-display {
+.habit-card.habit-done .counter-display {
   color: var(--color-success);
 }
 
@@ -506,17 +506,17 @@ body {
   cursor: pointer;
 }
 
-.goal-card:not(.goal-done) {
+.habit-card:not(.habit-done) {
   cursor: pointer;
 }
 
 /* ─── Inline card popups ────────────────────────────────────────────────────── */
-.goal-delete-popup,
+.habit-delete-popup,
 .task-delete-popup,
 .thisweek-popup,
 .area-delete-popup,
 .task-complete-popup,
-.goal-counter-popup {
+.habit-counter-popup {
   position: absolute;
   inset: 0;
   background: var(--surface);
@@ -574,7 +574,7 @@ body {
 
 /* ─── Touch drag ────────────────────────────────────────────────────────────── */
 .task-card.touch-dragging,
-.goal-card.touch-dragging {
+.habit-card.touch-dragging {
   opacity: 0.4;
   transform: scale(0.98);
 }
@@ -598,15 +598,15 @@ body {
 
 /* ─── Drag and drop ─────────────────────────────────────────────────────────── */
 .task-card[draggable="true"],
-.goal-card[draggable="true"] { cursor: grab; }
+.habit-card[draggable="true"] { cursor: grab; }
 .task-card[draggable="true"]:active,
-.goal-card[draggable="true"]:active { cursor: grabbing; }
+.habit-card[draggable="true"]:active { cursor: grabbing; }
 .task-card.dragging,
-.goal-card.dragging { opacity: 0.4; }
+.habit-card.dragging { opacity: 0.4; }
 .task-card.drag-over-top,
-.goal-card.drag-over-top { border-top: 2px solid var(--text-primary); }
+.habit-card.drag-over-top { border-top: 2px solid var(--text-primary); }
 .task-card.drag-over-bottom,
-.goal-card.drag-over-bottom { border-bottom: 2px solid var(--text-primary); }
+.habit-card.drag-over-bottom { border-bottom: 2px solid var(--text-primary); }
 
 /* ─── Modals ────────────────────────────────────────── */
 .modal {
@@ -761,7 +761,7 @@ body {
 
   /* Hide desktop add buttons — mobile uses bottom + button */
   #add-task-btn,
-  #add-goal-btn {
+  #add-habit-btn {
     display: none;
   }
 
@@ -997,7 +997,7 @@ body {
 
 /* ─── Touch-friendly cards ───────────────────────────── */
   .task-card,
-  .goal-card {
+  .habit-card {
     padding: 16px;
   }
 }
@@ -1033,8 +1033,8 @@ body {
   border-color: var(--text-primary);
 }
 
-/* ─── Mobile: goal target counter ───────────────────────────────────────────── */
-.goal-target-counter {
+/* ─── Mobile: habit target counter ──────────────────────────────────────────── */
+.habit-target-counter {
   display: flex;
   align-items: center;
   gap: 20px;
