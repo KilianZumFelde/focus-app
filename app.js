@@ -327,41 +327,21 @@ function updateViewHeader() {
   if (mobileShowCompleted) title += ' — Completed';
   document.getElementById('view-title').textContent = title;
 
-  // Mobile: "Completed ›" link in header for area/all views
-  document.getElementById('completed-link')?.remove();
-  if (isMobile()) {
-    const isAreaOrAll = state.currentView === 'all' || state.areas.find(a => a.id === state.currentView);
-    if (isAreaOrAll && !mobileShowCompleted) {
-      const link = document.createElement('button');
-      link.id = 'completed-link';
-      link.className = 'completed-header-link';
-      link.textContent = 'Completed ›';
-      link.addEventListener('click', () => { mobileShowCompleted = true; render(); });
-      document.querySelector('.header-left').appendChild(link);
-    }
-  }
+  // Mobile: "Completed ›" link — visible on area/all views when not already showing completed
+  const isAreaOrAll = state.currentView === 'all' || state.areas.find(a => a.id === state.currentView);
+  document.getElementById('completed-link').classList.toggle(
+    'hidden', !isMobile() || !isAreaOrAll || mobileShowCompleted
+  );
 
-  // Mobile: "focus." link in This Week header
-  document.getElementById('focus-data-link')?.remove();
-  if (isMobile() && state.currentView === 'this-week') {
-    const focusLink = document.createElement('button');
-    focusLink.id = 'focus-data-link';
-    focusLink.className = 'completed-header-link';
-    focusLink.textContent = 'focus.';
-    focusLink.addEventListener('click', openDataMenu);
-    document.querySelector('.header-left').appendChild(focusLink);
-  }
+  // Mobile: "focus." link — visible only on This Week view
+  document.getElementById('focus-data-link').classList.toggle(
+    'hidden', !isMobile() || state.currentView !== 'this-week'
+  );
 
-  // "Clear all" button when viewing completed tasks
-  document.getElementById('clear-completed-btn')?.remove();
-  if (state.currentView === 'completed' || mobileShowCompleted) {
-    const clearBtn = document.createElement('button');
-    clearBtn.id = 'clear-completed-btn';
-    clearBtn.className = 'clear-completed-btn';
-    clearBtn.textContent = 'Clear all';
-    clearBtn.addEventListener('click', clearCompleted);
-    document.querySelector('.header-actions').appendChild(clearBtn);
-  }
+  // "Clear all" button — visible when viewing completed tasks (desktop only; .header-actions is hidden on mobile)
+  document.getElementById('clear-completed-btn').classList.toggle(
+    'hidden', state.currentView !== 'completed' && !mobileShowCompleted
+  );
 }
 
 // ─── Render: task list ────────────────────────────────────────────────────────
@@ -1357,7 +1337,12 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('add-new-btn').addEventListener('click', () => openNewModal());
   document.getElementById('add-area-btn').addEventListener('click', openAddArea);
 
-  // New modal (unified task + goal)
+  // Header action buttons (static elements, toggled by updateViewHeader)
+  document.getElementById('completed-link').addEventListener('click', () => { mobileShowCompleted = true; render(); });
+  document.getElementById('focus-data-link').addEventListener('click', openDataMenu);
+  document.getElementById('clear-completed-btn').addEventListener('click', clearCompleted);
+
+  // New modal (unified task + habit)
   document.getElementById('new-modal-cancel').addEventListener('click', closeNewModal);
   document.getElementById('new-modal-save').addEventListener('click', saveNew);
   document.getElementById('new-modal-overlay').addEventListener('click', closeNewModal);
