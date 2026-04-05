@@ -273,61 +273,33 @@ function renderGoals(taskList) {
   return true;
 }
 
-// ─── Render: task list ────────────────────────────────────────────────────────
+// ─── Render: header ───────────────────────────────────────────────────────────
 
-function renderTasks() {
-  const taskList    = document.getElementById('task-list');
-  const emptyState  = document.getElementById('empty-state');
-  const viewTitle   = document.getElementById('view-title');
-  const addNewBtn   = document.getElementById('add-new-btn');
+function updateViewHeader() {
+  const addNewBtn = document.getElementById('add-new-btn');
 
-  let tasks = [];
+  // Compute title and addNewBtn visibility
   let title = '';
-  let isDraggable = false;
-
   if (state.currentView === 'this-week') {
     title = 'This Week';
-    tasks = state.tasks.filter(t => t.thisWeek && !t.done);
-    isDraggable = true;
     addNewBtn.classList.remove('hidden');
   } else if (state.currentView === 'all') {
     title = 'All Tasks & Habits';
-    tasks = state.tasks.filter(t => !t.done);
-    isDraggable = true;
     addNewBtn.classList.remove('hidden');
   } else if (state.currentView === 'completed') {
     title = 'Completed';
-    tasks = state.tasks.filter(t => t.done);
     addNewBtn.classList.add('hidden');
   } else {
     const area = state.areas.find(a => a.id === state.currentView);
-    if (area) {
-      title = area.name;
-      // On mobile, respect completed inline view
-      if (isMobile() && mobileShowCompleted) {
-        tasks = state.tasks.filter(t => t.areaId === area.id && t.done);
-      } else {
-        tasks = state.tasks.filter(t => t.areaId === area.id && !t.done);
-        isDraggable = true;
-      }
-    }
+    title = area ? area.name : '';
     addNewBtn.classList.remove('hidden');
   }
 
-  // Mobile: All Tasks with completed inline view
-  if (isMobile() && state.currentView === 'all') {
-    if (mobileShowCompleted) {
-      tasks = state.tasks.filter(t => t.done);
-    } else {
-      tasks = state.tasks.filter(t => !t.done);
-    }
-  }
+  if (mobileShowCompleted) title += ' — Completed';
+  document.getElementById('view-title').textContent = title;
 
-  // On mobile: show "Completed" link in header for area/all views,
-  // or a back link when viewing completed inside an area
-  const completedLink = document.getElementById('completed-link');
-  if (completedLink) completedLink.remove();
-
+  // Mobile: "Completed ›" link in header for area/all views
+  document.getElementById('completed-link')?.remove();
   if (isMobile()) {
     const isAreaOrAll = state.currentView === 'all' || state.areas.find(a => a.id === state.currentView);
     if (isAreaOrAll && !mobileShowCompleted) {
@@ -335,23 +307,13 @@ function renderTasks() {
       link.id = 'completed-link';
       link.className = 'completed-header-link';
       link.textContent = 'Completed ›';
-      link.addEventListener('click', () => {
-        mobileShowCompleted = true;
-        render();
-      });
+      link.addEventListener('click', () => { mobileShowCompleted = true; render(); });
       document.querySelector('.header-left').appendChild(link);
     }
   }
 
-  if (mobileShowCompleted) {
-    title += ' — Completed';
-  }
-
-  viewTitle.textContent = title;
-
-  // Mobile: "focus." tap link in This Week header
-  const existingFocusLink = document.getElementById('focus-data-link');
-  if (existingFocusLink) existingFocusLink.remove();
+  // Mobile: "focus." link in This Week header
+  document.getElementById('focus-data-link')?.remove();
   if (isMobile() && state.currentView === 'this-week') {
     const focusLink = document.createElement('button');
     focusLink.id = 'focus-data-link';
@@ -361,17 +323,53 @@ function renderTasks() {
     document.querySelector('.header-left').appendChild(focusLink);
   }
 
-  // Show "Clear all" button in header when viewing completed tasks
-  const existingClear = document.getElementById('clear-completed-btn');
-  if (existingClear) existingClear.remove();
-  const isShowingCompleted = state.currentView === 'completed' || mobileShowCompleted;
-  if (isShowingCompleted) {
+  // "Clear all" button when viewing completed tasks
+  document.getElementById('clear-completed-btn')?.remove();
+  if (state.currentView === 'completed' || mobileShowCompleted) {
     const clearBtn = document.createElement('button');
     clearBtn.id = 'clear-completed-btn';
     clearBtn.className = 'clear-completed-btn';
     clearBtn.textContent = 'Clear all';
     clearBtn.addEventListener('click', clearCompleted);
     document.querySelector('.header-actions').appendChild(clearBtn);
+  }
+}
+
+// ─── Render: task list ────────────────────────────────────────────────────────
+
+function renderTasks() {
+  const taskList   = document.getElementById('task-list');
+  const emptyState = document.getElementById('empty-state');
+
+  let tasks = [];
+  let isDraggable = false;
+
+  if (state.currentView === 'this-week') {
+    tasks = state.tasks.filter(t => t.thisWeek && !t.done);
+    isDraggable = true;
+  } else if (state.currentView === 'all') {
+    tasks = state.tasks.filter(t => !t.done);
+    isDraggable = true;
+  } else if (state.currentView === 'completed') {
+    tasks = state.tasks.filter(t => t.done);
+  } else {
+    const area = state.areas.find(a => a.id === state.currentView);
+    if (area) {
+      // On mobile, respect completed inline view
+      if (isMobile() && mobileShowCompleted) {
+        tasks = state.tasks.filter(t => t.areaId === area.id && t.done);
+      } else {
+        tasks = state.tasks.filter(t => t.areaId === area.id && !t.done);
+        isDraggable = true;
+      }
+    }
+  }
+
+  // Mobile: All Tasks with completed inline view
+  if (isMobile() && state.currentView === 'all') {
+    tasks = mobileShowCompleted
+      ? state.tasks.filter(t => t.done)
+      : state.tasks.filter(t => !t.done);
   }
 
   taskList.innerHTML = '';
@@ -483,6 +481,7 @@ function renderTasks() {
 
 function render() {
   renderSidebar();
+  updateViewHeader();
   renderTasks();
   if (isMobile() && !document.getElementById('areas-screen').classList.contains('hidden')) {
     renderAreasScreen();
