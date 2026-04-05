@@ -948,6 +948,21 @@ function addSwipeLeft(card, onSwipe) {
 }
 
 
+// ─── Touch long-press helper ─────────────────────────────────────────────────
+
+// Fires callback after delayMs of continuous touch on el.
+// onBeforeStart(e) is called on touchstart — return false to cancel the timer.
+function addTouchLongPress(el, callback, delayMs, onBeforeStart = null) {
+  let holdTimer = null;
+  el.addEventListener('touchstart', (e) => {
+    if (onBeforeStart && onBeforeStart(e) === false) return;
+    holdTimer = setTimeout(() => { holdTimer = null; callback(); }, delayMs);
+  }, { passive: true });
+  el.addEventListener('touchend',    () => { if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; } });
+  el.addEventListener('touchcancel', () => { if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; } });
+  el.addEventListener('touchmove',   () => { if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; } }, { passive: true });
+}
+
 // ─── Inline card popup builder ───────────────────────────────────────────────
 
 // Creates a popup overlay with a label, a confirm button, and a cancel button.
@@ -994,27 +1009,13 @@ function showGoalDeletePopup(card, goalId) {
 // ─── This Week long-press popup ──────────────────────────────────────────────
 
 function addThisWeekLongPress(card, task) {
-  let holdTimer = null;
-
-  card.addEventListener('touchstart', (e) => {
-    if (e.target.closest('.drag-handle')) return;
+  addTouchLongPress(card, () => {
+    card._longPressActive = true;
+    showThisWeekPopup(card, task);
+  }, 600, (e) => {
+    if (e.target.closest('.drag-handle')) return false;
     card._longPressActive = false;
-    holdTimer = setTimeout(() => {
-      holdTimer = null;
-      card._longPressActive = true;
-      showThisWeekPopup(card, task);
-    }, 600);
-  }, { passive: true });
-
-  card.addEventListener('touchend', () => {
-    if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
   });
-  card.addEventListener('touchcancel', () => {
-    if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
-  });
-  card.addEventListener('touchmove', () => {
-    if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
-  }, { passive: true });
 }
 
 function showThisWeekPopup(card, task) {
@@ -1186,19 +1187,12 @@ function importData(file) {
 }
 
 function addDataMenuLongPress(el) {
-  let holdTimer = null;
-  el.addEventListener('touchstart', () => {
-    holdTimer = setTimeout(() => { holdTimer = null; openDataMenu(); }, 800);
-  }, { passive: true });
-  el.addEventListener('touchend',   () => { if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; } });
-  el.addEventListener('touchcancel',() => { if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; } });
-  el.addEventListener('touchmove',  () => { if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; } }, { passive: true });
+  addTouchLongPress(el, openDataMenu, 800);
   // Desktop: long mousedown
-  el.addEventListener('mousedown', () => {
-    holdTimer = setTimeout(() => { holdTimer = null; openDataMenu(); }, 800);
-  });
-  el.addEventListener('mouseup',   () => { if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; } });
-  el.addEventListener('mouseleave',() => { if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; } });
+  let holdTimer = null;
+  el.addEventListener('mousedown',  () => { holdTimer = setTimeout(() => { holdTimer = null; openDataMenu(); }, 800); });
+  el.addEventListener('mouseup',    () => { if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; } });
+  el.addEventListener('mouseleave', () => { if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; } });
 }
 
 // ─── Area delete popup ────────────────────────────────────────────────────────
