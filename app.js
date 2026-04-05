@@ -254,6 +254,11 @@ function renderGoals(taskList) {
     card.style.borderLeftColor = borderColor;
     card.dataset.goalId = goal.id;
 
+    const progress = goal.target > 0 ? Math.min(goal.count / goal.target, 1) : 0;
+    const fillColor = area ? area.color.replace(/^hsl\((.+)\)$/, 'hsla($1, 0.2)') : 'transparent';
+    card.style.setProperty('--goal-progress', `${Math.round(progress * 100)}%`);
+    card.style.setProperty('--goal-fill-color', fillColor);
+
     card.innerHTML = `
       <div class="goal-card-main">
         <div class="goal-card-content">

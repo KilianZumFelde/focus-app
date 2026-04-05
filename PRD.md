@@ -77,6 +77,7 @@ Recurring tasks that reset every Monday. Separate from one-off tasks but tied to
 - Has a target threshold (e.g. 6) set at creation, editable later
 - Counter with `+` and `−` buttons tracks progress (e.g. 3 / 6)
 - When counter reaches target: shows as done visually, stays in the list
+- Progress fill: card background fills left-to-right with the area color (low opacity) proportional to count/target. Applied when the counter popup is confirmed. Animates in with a CSS transition. Hidden once the target is reached (done state takes over).
 - Every Monday on app open: all counters reset to 0 automatically
 - Created via a `+ New goal` button in This Week and area views
 - Fields: title, area, target number

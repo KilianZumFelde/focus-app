@@ -380,6 +380,22 @@ body {
   transition: box-shadow 0.15s;
 }
 
+.goal-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  width: var(--goal-progress, 0%);
+  background: var(--goal-fill-color, transparent);
+  border-radius: var(--radius);
+  transition: width 0.4s ease;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.goal-card.goal-done {
+  --goal-progress: 0%;
+}
+
 .goal-card:hover {
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.09);
 }
@@ -388,6 +404,8 @@ body {
   display: flex;
   align-items: center;
   gap: 12px;
+  position: relative;
+  z-index: 1;
 }
 
 .goal-card-content {
