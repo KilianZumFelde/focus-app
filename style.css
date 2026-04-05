@@ -487,11 +487,17 @@ body {
 .drag-handle::after {
   content: '';
   display: block;
-  width: 18px;
-  height: 2px;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
   background: var(--text-muted);
-  border-radius: 2px;
-  box-shadow: 0 -6px 0 var(--text-muted), 0 6px 0 var(--text-muted);
+  transform: translateY(-6px);
+  box-shadow:
+    6px 0    0 var(--text-muted),
+    0   6px  0 var(--text-muted),
+    6px 6px  0 var(--text-muted),
+    0   12px 0 var(--text-muted),
+    6px 12px 0 var(--text-muted);
 }
 
 /* ─── Card tap cursor ───────────────────────────────────────────────────────── */
