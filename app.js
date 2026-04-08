@@ -7,11 +7,10 @@ const MOBILE_BREAKPOINT    = 768;         // px — must match @media breakpoint
 const STORAGE_KEY          = 'focus-app-v1';
 const WEEKLY_REVIEW_KEY    = 'focus-weekly-review-shown';
 const LONG_PRESS_DATA_MS   = 800;         // ms — long-press to open data menu
-const LONG_PRESS_WEEK_MS   = 600;         // ms — long-press to toggle This Week
 const COMPLETE_FLASH_MS    = 300;         // ms — green flash phase of task completion animation
 const COMPLETE_COLLAPSE_MS = 300;         // ms — collapse phase of task completion animation
 const SWIPE_THRESHOLD_PX   = 60;          // px — minimum swipe distance to trigger action
-const COLOR_SUCCESS        = '#3faa6e';   // matches --color-success in style.css
+const COLOR_SUCCESS        = '#1a1a1a';   // matches --color-success in style.css
 
 // ─── Color generation for areas ──────────────────────────────────────────────
 // Spreads hues evenly around the color wheel using a golden angle offset
@@ -73,13 +72,17 @@ function generateId() {
 }
 
 // Returns the date string of Monday of the current week (e.g. "2026-03-30")
+// Uses local timezone to avoid UTC date-shift for users east of UTC.
 function getCurrentWeekKey() {
   const now = new Date();
   const day = now.getDay(); // 0=Sun, 1=Mon ... 6=Sat
   const diff = day === 0 ? -6 : 1 - day;
   const monday = new Date(now);
   monday.setDate(now.getDate() + diff);
-  return monday.toISOString().slice(0, 10);
+  const y = monday.getFullYear();
+  const m = String(monday.getMonth() + 1).padStart(2, '0');
+  const d = String(monday.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
 }
 
 function resetHabitsIfNewWeek() {
@@ -95,7 +98,11 @@ function resetHabitsIfNewWeek() {
     const totalHabits = state.habits.length;
     const accomplishedHabits = state.habits.filter(g => g.count >= g.target).length;
     const thisWeekTasks = state.tasks.filter(t => t.thisWeek && !t.done);
-    const thisWeekTasksDone = state.tasks.filter(t => t.thisWeek && t.done).length;
+    // Only count tasks completed during the week that just ended (not historical weeks)
+    const [wy, wm, wd] = weekKey.split('-').map(Number);
+    const prevMonday = new Date(wy, wm - 1, wd - 7);
+    const prevWeekKey = `${prevMonday.getFullYear()}-${String(prevMonday.getMonth()+1).padStart(2,'0')}-${String(prevMonday.getDate()).padStart(2,'0')}`;
+    const thisWeekTasksDone = state.tasks.filter(t => t.thisWeek && t.completedInWeek === prevWeekKey).length;
     const thisWeekTasksTotal = thisWeekTasks.length + thisWeekTasksDone;
     const incompleteThisWeekIds = thisWeekTasks.map(t => t.id);
 
@@ -407,12 +414,9 @@ function appendTaskCard(task, section, taskList, isDraggable, isCompleted, isAre
     card.classList.add('task-tappable');
     addTaskTapPopup(card, task);
     if (isMobile()) {
-      if (isAreaView && !task.thisWeek) {
-        // Area view, not in week: swipe = delete, hold = add to week
+      if (!task.thisWeek) {
         addSwipeLeft(card, () => showTaskDeletePopup(card, task.id));
-        addThisWeekLongPress(card, task);
       } else {
-        // This Week view or already-in-week task: swipe = remove from week
         addSwipeLeft(card, () => showThisWeekPopup(card, task));
       }
     }
@@ -506,6 +510,7 @@ function completeTask(id) {
   if (!card) {
     task.done = true;
     task.completedAt = new Date().toISOString();
+    task.completedInWeek = getCurrentWeekKey();
     commit();
     return;
   }
@@ -521,6 +526,7 @@ function completeTask(id) {
       // Animation done — update state and re-render
       task.done = true;
       task.completedAt = new Date().toISOString();
+      task.completedInWeek = getCurrentWeekKey();
       commit();
     }, COMPLETE_COLLAPSE_MS);
   }, COMPLETE_FLASH_MS);
@@ -1016,16 +1022,6 @@ function showHabitDeletePopup(card, habitId) {
 
 // ─── This Week long-press popup ──────────────────────────────────────────────
 
-function addThisWeekLongPress(card, task) {
-  addTouchLongPress(card, () => {
-    card._longPressActive = true;
-    showThisWeekPopup(card, task);
-  }, LONG_PRESS_WEEK_MS, (e) => {
-    if (e.target.closest('.drag-handle')) return false;
-    card._longPressActive = false;
-  });
-}
-
 function showThisWeekPopup(card, task) {
   card.querySelector('.thisweek-popup')?.remove();
   const label       = task.thisWeek ? 'Remove from This Week?' : 'Add to This Week?';
@@ -1043,9 +1039,12 @@ function addTaskTapPopup(card, task) {
     if (e.target.closest('.drag-handle')) return;
     if (e.target.closest('.task-complete-popup')) return;
     if (e.target.closest('.thisweek-popup')) return;
-    if (card._longPressActive) { card._longPressActive = false; return; }
-    if (card.querySelector('.task-complete-popup')) return;
-    showTaskCompletePopup(card, task);
+    if (card.querySelector('.task-complete-popup') || card.querySelector('.thisweek-popup')) return;
+    if (task.thisWeek) {
+      showTaskCompletePopup(card, task);
+    } else {
+      showThisWeekPopup(card, task);
+    }
   });
 }
 
@@ -1084,27 +1083,37 @@ function showHabitCounterPopup(card, habit) {
 
   const g = getHabit();
   if (!g) return;
+  const originalCount = g.count;
   popup.innerHTML = `
     <div class="popup-inner">
       <button class="counter-btn popup-decrement" ${g.count <= 0 ? 'disabled' : ''}>−</button>
       <span class="popup-count counter-display">${g.count} / ${g.target}</span>
       <button class="counter-btn popup-increment" ${g.count >= g.target ? 'disabled' : ''}>+</button>
-      <button class="confirm-green" style="margin-left:auto;">Done</button>
+      <button class="popup-cancel" style="margin-left:auto;">Cancel</button>
+      <button class="confirm-green">Confirm</button>
     </div>
   `;
 
   popup.querySelector('.popup-decrement').addEventListener('click', (e) => {
     e.stopPropagation();
     const g = getHabit();
-    if (g && g.count > 0) { g.count--; saveState(); updateDisplay(); }
+    if (g && g.count > 0) { g.count--; updateDisplay(); }
   });
   popup.querySelector('.popup-increment').addEventListener('click', (e) => {
     e.stopPropagation();
     const g = getHabit();
-    if (g && g.count < g.target) { g.count++; saveState(); updateDisplay(); }
+    if (g && g.count < g.target) { g.count++; updateDisplay(); }
   });
   popup.querySelector('.confirm-green').addEventListener('click', (e) => {
     e.stopPropagation();
+    saveState();
+    popup.remove();
+    render();
+  });
+  popup.querySelector('.popup-cancel').addEventListener('click', (e) => {
+    e.stopPropagation();
+    const g = getHabit();
+    if (g) g.count = originalCount;
     popup.remove();
     render();
   });

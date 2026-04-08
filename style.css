@@ -14,7 +14,7 @@
   --text-muted: #C0BCB2;
   --radius: 12px;
   --radius-sm: 8px;
-  --color-success: #3faa6e; /* matches COLOR_SUCCESS in app.js */
+  --color-success: #1a1a1a; /* matches COLOR_SUCCESS in app.js */
 }
 
 body {
@@ -581,7 +581,7 @@ body {
 
 /* ─── Task completion animation ─────────────────────────────────────────────── */
 .task-card.completing-flash {
-  background: #edf7f1;
+  background: #e8e8e8;
   border-left-color: var(--color-success) !important;
   transition: background 0.25s ease, border-left-color 0.25s ease;
 }
