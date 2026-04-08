@@ -1089,8 +1089,8 @@ function showHabitCounterPopup(card, habit) {
       <button class="counter-btn popup-decrement" ${g.count <= 0 ? 'disabled' : ''}>−</button>
       <span class="popup-count counter-display">${g.count} / ${g.target}</span>
       <button class="counter-btn popup-increment" ${g.count >= g.target ? 'disabled' : ''}>+</button>
-      <button class="popup-cancel" style="margin-left:auto;">Cancel</button>
-      <button class="confirm-green">Confirm</button>
+      <button class="confirm-green" style="margin-left:auto;">Confirm</button>
+      <button class="popup-cancel">Cancel</button>
     </div>
   `;
 
