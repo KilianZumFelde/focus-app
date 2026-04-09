@@ -11,6 +11,7 @@ const COMPLETE_FLASH_MS    = 300;         // ms — green flash phase of task co
 const COMPLETE_COLLAPSE_MS = 300;         // ms — collapse phase of task completion animation
 const SWIPE_THRESHOLD_PX   = 60;          // px — minimum swipe distance to trigger action
 const COLOR_SUCCESS        = '#1a1a1a';   // matches --color-success in style.css
+const COLOR_HABIT_DONE     = '#3faa6e';   // matches --color-habit-done in style.css
 
 // ─── Color generation for areas ──────────────────────────────────────────────
 // Spreads hues evenly around the color wheel using a golden angle offset
@@ -278,7 +279,7 @@ function renderHabits(taskList, prevProgressWidths = new Map()) {
     card.dataset.habitId = habit.id;
 
     const progress = habit.target > 0 ? Math.min(habit.count / habit.target, 1) : 0;
-    const fillColor = isDone ? COLOR_SUCCESS : (area ? area.color.replace(/^hsl\((.+)\)$/, 'hsla($1, 0.8)') : 'transparent');
+    const fillColor = isDone ? COLOR_HABIT_DONE : (area ? area.color.replace(/^hsl\((.+)\)$/, 'hsla($1, 0.8)') : 'transparent');
 
     card.innerHTML = `
       <div class="habit-card-main">

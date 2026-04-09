@@ -15,6 +15,7 @@
   --radius: 12px;
   --radius-sm: 8px;
   --color-success: #1a1a1a; /* matches COLOR_SUCCESS in app.js */
+  --color-habit-done: #3faa6e;
 }
 
 body {
@@ -469,7 +470,7 @@ body {
 }
 
 .habit-card.habit-done .counter-display {
-  color: var(--color-success);
+  color: var(--color-habit-done);
 }
 
 /* ─── Drag handle ───────────────────────────────────────────────────────────── */
