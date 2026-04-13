@@ -7,6 +7,9 @@ const MOBILE_BREAKPOINT    = 768;         // px — must match @media breakpoint
 const STORAGE_KEY          = 'focus-app-v1';
 const WEEKLY_REVIEW_KEY    = 'focus-weekly-review-shown';
 const LONG_PRESS_DATA_MS   = 800;         // ms — long-press to open data menu
+const VOICE_LONG_PRESS_MS  = 600;         // ms — long-press + to start voice recording
+const TITLE_MAX_LENGTH     = 80;          // chars — enforced in voice parser
+const VOICE_API_KEY_STORE  = 'focus-voice-api-key';
 const COMPLETE_FLASH_MS    = 300;         // ms — green flash phase of task completion animation
 const COMPLETE_COLLAPSE_MS = 300;         // ms — collapse phase of task completion animation
 const SWIPE_THRESHOLD_PX   = 60;          // px — minimum swipe distance to trigger action
@@ -1325,6 +1328,363 @@ function updateBackBtn(view) {
   }
 }
 
+// ─── Voice input ─────────────────────────────────────────────────────────────
+//
+// Flow: long-press + → hold to record (Web Speech API) → release → LLM
+// interpretation → existing modal prefilled → user confirms.
+// No auto-creation; no conversational UI.
+
+let voiceState = 'idle';   // 'idle' | 'recording' | 'processing'
+let voiceRec   = null;     // active SpeechRecognition instance
+let voiceText  = '';       // transcript from current recording
+
+function voiceSupported() {
+  return !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+}
+
+function getStoredApiKey() {
+  return localStorage.getItem(VOICE_API_KEY_STORE) || null;
+}
+
+function ensureApiKey() {
+  const key = getStoredApiKey();
+  if (key) return key;
+  const entered = prompt(
+    'Enter your Anthropic API key to enable voice input.\n' +
+    'It is stored only in your browser (localStorage) and sent only to api.anthropic.com.'
+  );
+  if (entered && entered.trim()) {
+    localStorage.setItem(VOICE_API_KEY_STORE, entered.trim());
+    return entered.trim();
+  }
+  return null;
+}
+
+// ─── Voice overlay & toast ────────────────────────────────────────────────────
+
+function showVoiceOverlay() {
+  document.getElementById('voice-overlay').classList.remove('hidden');
+}
+
+function hideVoiceOverlay() {
+  document.getElementById('voice-overlay').classList.add('hidden');
+}
+
+let voiceToastTimer = null;
+
+function showVoiceToast(msg, persist = false) {
+  const el = document.getElementById('voice-toast');
+  el.textContent = msg;
+  el.classList.remove('hidden');
+  clearTimeout(voiceToastTimer);
+  if (!persist) {
+    voiceToastTimer = setTimeout(() => el.classList.add('hidden'), 2500);
+  }
+}
+
+function hideVoiceToast() {
+  clearTimeout(voiceToastTimer);
+  document.getElementById('voice-toast').classList.add('hidden');
+}
+
+// ─── Recording lifecycle ──────────────────────────────────────────────────────
+
+function startVoiceRecording() {
+  if (voiceState !== 'idle') return;
+
+  if (!voiceSupported()) {
+    showVoiceToast('Voice input requires Chrome or Safari');
+    return;
+  }
+
+  const apiKey = ensureApiKey();
+  if (!apiKey) return;
+
+  voiceState = 'recording';
+  voiceText  = '';
+  showVoiceOverlay();
+
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  voiceRec = new SR();
+  voiceRec.interimResults  = false;
+  voiceRec.maxAlternatives = 1;
+  voiceRec.lang            = navigator.language || 'en-US';
+
+  voiceRec.onresult = (e) => {
+    voiceText = Array.from(e.results)
+      .map(r => r[0].transcript)
+      .join(' ')
+      .trim();
+  };
+
+  voiceRec.onerror = (e) => {
+    if (voiceState !== 'recording') return;
+    voiceState = 'idle';
+    hideVoiceOverlay();
+    voiceRec = null;
+    if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
+      showVoiceToast('Microphone access denied');
+    } else if (e.error === 'no-speech') {
+      showVoiceToast('No speech detected');
+    } else {
+      showVoiceToast('Could not record audio');
+    }
+  };
+
+  voiceRec.onend = () => {
+    if (voiceState !== 'recording') return;
+    voiceState = 'idle';
+    hideVoiceOverlay();
+    const transcript = voiceText.trim();
+    voiceRec = null;
+    if (!transcript) {
+      showVoiceToast('No speech detected');
+      return;
+    }
+    processVoiceTranscript(transcript);
+  };
+
+  try {
+    voiceRec.start();
+  } catch (_) {
+    voiceState = 'idle';
+    hideVoiceOverlay();
+    voiceRec = null;
+    showVoiceToast('Could not start recording');
+  }
+}
+
+function stopVoiceRecording() {
+  if (voiceState !== 'recording' || !voiceRec) return;
+  try { voiceRec.stop(); } catch (_) {}
+}
+
+// ─── Transcript → modal ───────────────────────────────────────────────────────
+
+async function processVoiceTranscript(transcript) {
+  voiceState = 'processing';
+  showVoiceToast('Processing…', true);
+
+  const apiKey = getStoredApiKey();
+  if (!apiKey) {
+    hideVoiceToast();
+    voiceState = 'idle';
+    openNewModal();
+    return;
+  }
+
+  try {
+    const raw        = await interpretWithLLM(transcript, apiKey);
+    const parsed     = parseModelResponse(raw);
+    const normalized = normalizeVoiceData(parsed);
+    hideVoiceToast();
+    voiceState = 'idle';
+    openNewModalPrefilled(normalized);
+  } catch (err) {
+    hideVoiceToast();
+    voiceState = 'idle';
+    if (err.message === 'invalid-key') {
+      localStorage.removeItem(VOICE_API_KEY_STORE);
+      showVoiceToast('Invalid API key — re-enter on next try');
+    } else {
+      showVoiceToast('Could not interpret speech');
+      openNewModal();
+    }
+  }
+}
+
+// ─── LLM call ─────────────────────────────────────────────────────────────────
+
+async function interpretWithLLM(transcript, apiKey) {
+  const areaNames = state.areas.map(a => a.name).join(', ');
+
+  const systemPrompt =
+`You are a task parser for a minimal personal task manager. Convert one spoken phrase into a structured entry.
+
+Output EXACTLY these 4 lines — nothing before, nothing after, no commentary, no questions:
+title: <short action-oriented title, max ${TITLE_MAX_LENGTH} chars>
+focus_area: <one of: ${areaNames}>
+type: <one of: habit, later, this week>
+weekly_target: <false or a positive integer>
+
+Rules:
+- title: short, imperative, strip filler words ("I should", "I need to", "probably", etc.)
+- title: if multiple unrelated tasks are present, output exactly: MULTIPLE
+- title: if the input is past-tense or non-actionable ("I already did X", "I am tired"), output exactly: NON_ACTIONABLE
+- focus_area: best match from the provided list; fallback to Misc if nothing fits
+- type: "habit" for recurring activities; "this week" for current/urgent one-offs; "later" for future one-offs
+- weekly_target: only a positive integer when type is habit AND a clear frequency is stated (e.g. "3 times a week" → 3, "every day" → 7, "on weekdays" → 5); otherwise false`;
+
+  const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true',
+    },
+    body: JSON.stringify({
+      model:      'claude-haiku-4-5-20251001',
+      max_tokens: 150,
+      system:     systemPrompt,
+      messages:   [{ role: 'user', content: `Transcript: "${transcript}"` }],
+    }),
+  });
+
+  if (!resp.ok) {
+    if (resp.status === 401) throw new Error('invalid-key');
+    throw new Error(`api-error-${resp.status}`);
+  }
+
+  const data = await resp.json();
+  return data.content[0].text;
+}
+
+// ─── Response parsing & normalization ────────────────────────────────────────
+
+function parseModelResponse(text) {
+  const out = { title: '', focus_area: '', type: '', weekly_target: '' };
+  for (const line of text.split('\n')) {
+    const m = line.match(/^([a-z_]+)\s*:\s*(.+)$/i);
+    if (!m) continue;
+    const key = m[1].toLowerCase();
+    if (key in out) out[key] = m[2].trim();
+  }
+  return out;
+}
+
+function normalizeVoiceData(parsed) {
+  // Special sentinel titles
+  const rawTitle = (parsed.title || '').trim();
+  if (rawTitle === 'MULTIPLE')      return { title: null, _reason: 'multiple' };
+  if (rawTitle === 'NON_ACTIONABLE') return { title: null, _reason: 'non-actionable' };
+
+  // Type — map to toggle values used by setNewToggle()
+  let type = (parsed.type || '').toLowerCase().trim();
+  if (type === 'this week') type = 'this-week';
+  if (!['habit', 'later', 'this-week'].includes(type)) type = 'later';
+
+  // Weekly target — only valid for habits
+  let weeklyTarget = false;
+  if (type === 'habit') {
+    const wt = String(parsed.weekly_target || '').toLowerCase().trim();
+    if (wt !== 'false' && wt !== '') {
+      const n = parseInt(wt, 10);
+      if (!isNaN(n) && n >= 1) weeklyTarget = n;
+    }
+  }
+
+  // Title — truncate at word boundary if over limit
+  let title = rawTitle;
+  if (title.length > TITLE_MAX_LENGTH) {
+    title = title.slice(0, TITLE_MAX_LENGTH).replace(/\s+\S*$/, '').trim();
+  }
+
+  // Area — case-insensitive name match; fallback to Misc, then first area
+  const areaName = (parsed.focus_area || '').trim().toLowerCase();
+  let area = state.areas.find(a => a.name.toLowerCase() === areaName);
+  if (!area) area = state.areas.find(a => a.name.toLowerCase() === 'misc');
+  if (!area) area = state.areas[0];
+  const areaId = area ? area.id : null;
+
+  return { title, areaId, type, weeklyTarget };
+}
+
+// ─── Prefilled modal ──────────────────────────────────────────────────────────
+
+function openNewModalPrefilled(data) {
+  if (!data.title) {
+    if (data._reason === 'multiple') {
+      showVoiceToast('Please say one task or habit at a time');
+    } else {
+      showVoiceToast('Could not detect an actionable item');
+    }
+    return;
+  }
+
+  // Open with normal defaults first (populates area selector DOM)
+  openNewModal(null);
+
+  // Override title
+  document.getElementById('new-title-input').value = data.title;
+
+  // Override type toggle (also shows/hides target inputs)
+  setNewToggle(data.type || 'later');
+
+  // Override area selection
+  if (data.areaId) {
+    if (isMobile()) {
+      document.querySelectorAll('#new-area-pills .area-pill').forEach(p => {
+        p.classList.toggle('selected', p.dataset.areaId === data.areaId);
+      });
+    } else {
+      document.getElementById('new-area-select').value = data.areaId;
+    }
+  }
+
+  // Override weekly target when applicable
+  if (data.type === 'habit' && data.weeklyTarget) {
+    document.getElementById('new-target-display').textContent = String(data.weeklyTarget);
+    document.getElementById('new-target-input').value         = String(data.weeklyTarget);
+  }
+
+  // Cursor to end of title so user can append/edit naturally
+  const inp = document.getElementById('new-title-input');
+  inp.setSelectionRange(inp.value.length, inp.value.length);
+}
+
+// ─── Long-press wiring ────────────────────────────────────────────────────────
+
+function initVoiceLongPress() {
+  if (!voiceSupported()) return;  // silently skip; normal tap still works
+
+  // mouseup anywhere on document stops recording (finger/mouse may drift off button)
+  document.addEventListener('mouseup', () => {
+    if (voiceState === 'recording') stopVoiceRecording();
+  });
+
+  function attachVoiceLongPress(btn) {
+    let holdTimer      = null;
+    let longPressFired = false;
+
+    function clearHold() {
+      if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
+    }
+
+    function armTimer() {
+      clearHold();
+      longPressFired = false;
+      holdTimer = setTimeout(() => {
+        holdTimer      = null;
+        longPressFired = true;
+        startVoiceRecording();
+      }, VOICE_LONG_PRESS_MS);
+    }
+
+    // Touch
+    btn.addEventListener('touchstart',  armTimer,  { passive: true });
+    btn.addEventListener('touchend',    () => { clearHold(); if (voiceState === 'recording') stopVoiceRecording(); });
+    btn.addEventListener('touchcancel', () => { clearHold(); longPressFired = false; if (voiceState === 'recording') stopVoiceRecording(); });
+    btn.addEventListener('touchmove',   clearHold, { passive: true });
+
+    // Mouse
+    btn.addEventListener('mousedown',  armTimer);
+    btn.addEventListener('mouseup',    clearHold);   // recording stopped by document handler
+    btn.addEventListener('mouseleave', clearHold);   // timer cancelled; recording continues until mouseup
+
+    // Capture-phase click: suppress after long-press so openNewModal() doesn't fire
+    btn.addEventListener('click', (e) => {
+      if (longPressFired || voiceState === 'processing') {
+        e.stopImmediatePropagation();
+        longPressFired = false;
+      }
+    }, true);
+  }
+
+  attachVoiceLongPress(document.getElementById('add-new-btn'));
+  attachVoiceLongPress(document.getElementById('mobile-nav-add'));
+}
+
 // ─── Event wiring (runs once on DOMContentLoaded) ─────────────────────────────
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -1419,6 +1779,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Long-press on "focus." title (desktop only) → data menu
   addDataMenuLongPress(document.querySelector('.app-name'));
+
+  // Long-press on + buttons → voice recording
+  initVoiceLongPress();
 
   // Data menu
   document.getElementById('data-export').addEventListener('click', exportData);

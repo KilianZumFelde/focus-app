@@ -195,6 +195,18 @@
     </div>
   </div>
 
+  <!-- Voice Recording Overlay (shown while holding + to record) -->
+  <div class="voice-overlay hidden" id="voice-overlay">
+    <div class="voice-overlay-card">
+      <div class="voice-mic">🎙</div>
+      <div class="voice-listening-text">Listening…</div>
+      <div class="voice-hint-text">Release to process</div>
+    </div>
+  </div>
+
+  <!-- Voice Status Toast (transient feedback) -->
+  <div class="voice-toast hidden" id="voice-toast"></div>
+
   <script src="app.js"></script>
   <!-- Service worker intentionally removed — no offline caching. -->
   <!-- To restore: add a service-worker.js with a network-first strategy. -->

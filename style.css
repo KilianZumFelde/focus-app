@@ -1111,3 +1111,77 @@ body {
   .areas-screen,
   .back-btn { display: none !important; }
 }
+
+/* ─── Voice input ───────────────────────────────────── */
+
+/* Full-screen wrapper — pointer-events:none so touchend still reaches the + button */
+.voice-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(26, 25, 23, 0.18);
+  pointer-events: none;
+}
+
+.voice-overlay.hidden { display: none; }
+
+.voice-overlay-card {
+  background: var(--surface);
+  border-radius: 20px;
+  padding: 32px 44px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.15);
+}
+
+@keyframes voice-pulse {
+  0%, 100% { transform: scale(1);    opacity: 1;   }
+  50%       { transform: scale(1.18); opacity: 0.65; }
+}
+
+.voice-mic {
+  font-size: 36px;
+  line-height: 1;
+  animation: voice-pulse 1.4s ease-in-out infinite;
+}
+
+.voice-listening-text {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.2px;
+}
+
+.voice-hint-text {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* Toast — appears at bottom, above bottom nav on mobile */
+.voice-toast {
+  position: fixed;
+  bottom: 88px;   /* above bottom nav on mobile */
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--text-primary);
+  color: #fff;
+  padding: 9px 18px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  z-index: 201;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.voice-toast.hidden { display: none; }
+
+@media (min-width: 769px) {
+  .voice-toast { bottom: 32px; }
+}
