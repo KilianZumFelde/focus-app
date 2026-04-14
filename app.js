@@ -1368,6 +1368,8 @@ function showVoiceOverlay() {
 
 function hideVoiceOverlay() {
   document.getElementById('voice-overlay').classList.add('hidden');
+  document.getElementById('voice-mic').classList.remove('speaking');
+  document.getElementById('voice-listening-text').textContent = 'Listening…';
 }
 
 let voiceToastTimer = null;
@@ -1409,6 +1411,16 @@ function startVoiceRecording() {
   voiceRec.interimResults  = false;
   voiceRec.maxAlternatives = 1;
   voiceRec.lang            = navigator.language || 'en-US';
+
+  voiceRec.onspeechstart = () => {
+    document.getElementById('voice-mic').classList.add('speaking');
+    document.getElementById('voice-listening-text').textContent = 'Got it…';
+  };
+
+  voiceRec.onspeechend = () => {
+    document.getElementById('voice-mic').classList.remove('speaking');
+    document.getElementById('voice-listening-text').textContent = 'Listening…';
+  };
 
   voiceRec.onresult = (e) => {
     voiceText = Array.from(e.results)
