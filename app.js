@@ -1334,9 +1334,10 @@ function updateBackBtn(view) {
 // interpretation → existing modal prefilled → user confirms.
 // No auto-creation; no conversational UI.
 
-let voiceState = 'idle';   // 'idle' | 'recording' | 'processing'
-let voiceRec   = null;     // active SpeechRecognition instance
-let voiceText  = '';       // transcript from current recording
+let voiceState       = 'idle';   // 'idle' | 'recording' | 'processing'
+let voiceRec         = null;     // active SpeechRecognition instance
+let voiceText        = '';       // accumulated transcript across restarts
+let voiceUserStopped = false;    // true when user released, false on browser timeout
 
 function voiceSupported() {
   return !!(window.SpeechRecognition || window.webkitSpeechRecognition);
@@ -1402,10 +1403,17 @@ function startVoiceRecording() {
   const apiKey = ensureApiKey();
   if (!apiKey) return;
 
-  voiceState = 'recording';
-  voiceText  = '';
+  voiceState       = 'recording';
+  voiceText        = '';
+  voiceUserStopped = false;
   showVoiceOverlay();
+  spawnRecognition();
+}
 
+// Creates and starts a fresh SpeechRecognition instance.
+// Called on first start and automatically on browser timeout to keep
+// recording seamlessly for as long as the user holds the button.
+function spawnRecognition() {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   voiceRec = new SR();
   voiceRec.interimResults  = false;
@@ -1423,21 +1431,19 @@ function startVoiceRecording() {
   };
 
   voiceRec.onresult = (e) => {
-    voiceText = Array.from(e.results)
-      .map(r => r[0].transcript)
-      .join(' ')
-      .trim();
+    const chunk = Array.from(e.results).map(r => r[0].transcript).join(' ').trim();
+    voiceText   = (voiceText + ' ' + chunk).trim();
   };
 
   voiceRec.onerror = (e) => {
     if (voiceState !== 'recording') return;
+    // 'no-speech' during a restart cycle is normal — onend will restart again
+    if (e.error === 'no-speech') return;
     voiceState = 'idle';
     hideVoiceOverlay();
     voiceRec = null;
     if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
       showVoiceToast('Microphone access denied');
-    } else if (e.error === 'no-speech') {
-      showVoiceToast('No speech detected');
     } else {
       showVoiceToast('Could not record audio');
     }
@@ -1445,15 +1451,23 @@ function startVoiceRecording() {
 
   voiceRec.onend = () => {
     if (voiceState !== 'recording') return;
-    voiceState = 'idle';
-    hideVoiceOverlay();
-    const transcript = voiceText.trim();
     voiceRec = null;
-    if (!transcript) {
-      showVoiceToast('No speech detected');
-      return;
+
+    if (voiceUserStopped) {
+      // User released the button — process whatever we collected
+      voiceUserStopped = false;
+      voiceState = 'idle';
+      hideVoiceOverlay();
+      const transcript = voiceText.trim();
+      if (!transcript) {
+        showVoiceToast('No speech detected');
+        return;
+      }
+      processVoiceTranscript(transcript);
+    } else {
+      // Browser hit its ~15s limit — restart seamlessly while user still holds
+      spawnRecognition();
     }
-    processVoiceTranscript(transcript);
   };
 
   try {
@@ -1468,6 +1482,7 @@ function startVoiceRecording() {
 
 function stopVoiceRecording() {
   if (voiceState !== 'recording' || !voiceRec) return;
+  voiceUserStopped = true;
   try { voiceRec.stop(); } catch (_) {}
 }
 
@@ -1511,7 +1526,9 @@ async function interpretWithLLM(transcript, apiKey) {
   const areaNames = state.areas.map(a => a.name).join(', ');
 
   const systemPrompt =
-`You are a task parser for a minimal personal task manager. Convert one spoken phrase into a structured entry.
+`You are a task parser for a minimal personal task manager.
+
+The transcript may be rambling, hesitant, or repetitive — the user was thinking out loud. Your job is to extract only the core actionable intent and express it as a clean, concise task or habit title. Do not transcribe what was said. Distill it.
 
 Output EXACTLY these 4 lines — nothing before, nothing after, no commentary, no questions:
 title: <short action-oriented title, max ${TITLE_MAX_LENGTH} chars>
@@ -1520,12 +1537,17 @@ type: <one of: habit, later, this week>
 weekly_target: <false or a positive integer>
 
 Rules:
-- title: short, imperative, strip filler words ("I should", "I need to", "probably", etc.)
+- title: imperative, minimal, strip all filler ("I should", "I need to", "I think", "maybe", "probably", "like", "uhh", "you know", etc.). If you can say it in 2 words, do it.
 - title: if multiple unrelated tasks are present, output exactly: MULTIPLE
 - title: if the input is past-tense or non-actionable ("I already did X", "I am tired"), output exactly: NON_ACTIONABLE
 - focus_area: best match from the provided list; fallback to Misc if nothing fits
 - type: "habit" for recurring activities; "this week" for current/urgent one-offs; "later" for future one-offs
-- weekly_target: only a positive integer when type is habit AND a clear frequency is stated (e.g. "3 times a week" → 3, "every day" → 7, "on weekdays" → 5); otherwise false`;
+- weekly_target: only a positive integer when type is habit AND a clear frequency is stated; otherwise false
+
+Examples of distillation:
+"uhh I think I should maybe... call the dentist yeah, I've been putting it off" → title: Call dentist
+"I want to like go running more, maybe like 3 times a week or something like that" → title: Go running, type: habit, weekly_target: 3
+"so I need to uh, prepare for that presentation, the one next week, yeah" → title: Prepare presentation, type: this week`;
 
   const resp = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',

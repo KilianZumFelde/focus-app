@@ -16,6 +16,7 @@ A minimalistic personal task manager that runs in your browser.
 - **Completed** — marking a task done moves it here, out of your way.
 - **Reorder** — drag tasks up or down in any view using the ≡ handle on the right of each card.
 - **Habits** — recurring items with a counter (e.g. 3 / 6). Tap to log progress. They reset automatically every Monday. When the target is reached the card shows as done.
+- **Voice input** — long-press the + button and speak while holding. Release when done. The app transcribes and interprets what you said, then opens the creation form prefilled. You review and confirm — nothing is created automatically. Requires an Anthropic API key (you'll be prompted the first time) and Chrome or Safari.
 
 ## Your data
 

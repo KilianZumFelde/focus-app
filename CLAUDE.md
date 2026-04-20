@@ -25,6 +25,7 @@ For mobile: host over HTTPS and install as PWA via browser "Add to Home Screen".
 - **Views** — This Week (all habits + flagged tasks), per-area (area habits + area tasks), All Tasks & Habits (all habits + task sections), Completed (archive, swipe to delete)
 - **Color coding** — each area has a unique color generated procedurally using the golden angle (137.5°) to spread hues evenly around the color wheel. Fixed saturation (45%) and lightness (78%) keep all colors soft/pastel. No ceiling — works for any number of areas.
 - **Drag-and-drop reordering** — available for tasks in This Week, All Tasks, and area views (not in Completed)
+- **Voice input** — long-press the + button (600ms) to start recording. Hold while speaking, release to process. Web Speech API transcribes in-browser (no API key needed). Transcript sent to Claude Haiku (Anthropic API) for interpretation. Returns structured plain-text block parsed into title, area, type, and weekly target. Existing creation modal opens prefilled — user reviews and confirms. No auto-creation. API key prompted on first use, stored in localStorage under `focus-voice-api-key`. Recording auto-restarts on browser timeout (~15s) so the user can speak for as long as needed.
 
 
 ## File structure
@@ -51,3 +52,4 @@ For mobile: host over HTTPS and install as PWA via browser "Add to Home Screen".
 - Area cards use tap animation (80ms delay before navigation) so the press is always visible
 - No service worker — removed to avoid stale cache issues. App requires a network connection.
 - Data menu (export/import): long-press (800ms) on "focus." title in the sidebar (desktop); tap the "focus." link that appears in the header on This Week view (mobile). Export saves a JSON backup; Import restores from a backup file. JSON includes version, exportedAt, areas, tasks, habits. Backward compatible with old exports that used "goals" key.
+- Voice input uses Web Speech API (browser-native, Chrome/Safari only, HTTPS required on mobile) for transcription + Anthropic Claude Haiku for interpretation. No backend. API key stored in localStorage. Long-press threshold is 600ms (shorter than data menu's 800ms). Two + buttons both support it: `#add-new-btn` (desktop) and `#mobile-nav-add` (mobile). Click is suppressed after long-press fires via capture-phase handler. Recording restarts automatically on browser timeout using `voiceUserStopped` flag to distinguish user release from browser cutoff. LLM prompt instructs distillation not transcription — rambling input is condensed to a clean title.

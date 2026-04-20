@@ -106,6 +106,22 @@ Recurring items that reset every Monday.
 
 ---
 
+### Voice Input
+
+A faster way to prefill the creation modal by speaking. Not a voice assistant — no auto-creation, no conversational flow.
+
+- **Trigger:** long-press the + button (600ms). Works on both desktop and mobile.
+- **Hold to record, release to process.** Recording continues for as long as the user holds — no timeout cutoff.
+- **While recording:** a small overlay appears with a pulsing ◉ and "Listening…" text. When speech is detected the pulse speeds up and text changes to "Got it…".
+- **On release:** transcript is sent to Claude Haiku (Anthropic API) for interpretation. The model distills the spoken intent into a clean title, selects the best matching area, infers type (habit / this week / later) and weekly target.
+- **Modal opens prefilled** — user reviews and can edit everything before saving.
+- **No auto-creation.** The model never creates items directly.
+- **API key:** prompted on first voice use, stored in localStorage. Never hardcoded.
+- **Browser support:** Chrome and Safari only (Web Speech API). Requires HTTPS on mobile.
+- **Error handling:** no speech, mic denied, API failure, non-actionable input, multiple items — all handled gracefully with a brief toast message. Falls back to the normal empty modal on LLM failure.
+
+---
+
 ### Out of scope (v1)
 - Due dates / calendar
 - Subtasks
