@@ -20,8 +20,8 @@ For mobile: host over HTTPS and install as PWA via browser "Add to Home Screen".
 
 ## Key concepts
 - **Focus Areas** — user-defined categories (Career, Health, Music, Bachata, Misc + custom). Each has a unique soft color. Swipe left on mobile to delete with confirmation.
-- **Tasks** — belong to an area. Have a title, done/not-done status, and a "this week" flag. No description, no editing after creation. Tap to complete (inline popup). In area view: hold to add to This Week, swipe left to delete. In This Week view: swipe left to remove from This Week. In Completed view: swipe left to delete permanently.
-- **Habits** — recurring items with a counter + target threshold (e.g. 3/6). Reset every Monday. Belong to an area. Appear at the top of This Week, area, and All Tasks & Habits views, above tasks, separated by a divider. Tap to open counter popup. Swipe left to delete. When target is reached, card shows as done. A thin progress bar below the area tag shows count/target progress in the area color; turns green when done.
+- **Tasks** — belong to an area. Have a title, done/not-done status, and a "this week" flag. No description, no editing after creation. Tap is context-aware: if the task is not in This Week, tap shows "Add to This Week?"; if it is in This Week, tap shows "Complete task?". On mobile, swipe left to delete (if not in This Week) or remove from This Week (if flagged). In Completed view: swipe left to delete permanently.
+- **Habits** — recurring items with a counter + target threshold (e.g. 3/6). Reset every Monday. Belong to an area. Appear at the top of This Week, area, and All Tasks & Habits views, above tasks, separated by a divider. Tap to open counter popup (+/− buttons, Confirm/Cancel — Cancel snaps back to original count). Swipe left to delete. When target is reached, card shows as done. A thin progress bar below the area tag shows count/target progress in the area color; turns green when done.
 - **Views** — This Week (all habits + flagged tasks), per-area (area habits + area tasks), All Tasks & Habits (all habits + task sections), Completed (archive, swipe to delete)
 - **Color coding** — each area has a unique color generated procedurally using the golden angle (137.5°) to spread hues evenly around the color wheel. Fixed saturation (45%) and lightness (78%) keep all colors soft/pastel. No ceiling — works for any number of areas.
 - **Drag-and-drop reordering** — available for tasks in This Week, All Tasks, and area views (not in Completed)
@@ -44,7 +44,7 @@ For mobile: host over HTTPS and install as PWA via browser "Add to Home Screen".
 - Completed tasks are fully separate from active tasks
 - Task completion uses a two-step animation: green flash → collapse/fade (~300ms each), then state updates
 - Mobile layout activates at ≤768px via CSS media query — desktop layout is untouched
-- Modals on mobile use `visualViewport` resize listener to stay above the Android keyboard; `autocomplete="off"` on all inputs suppresses the autofill bar
+- `autocomplete="off"` on all inputs suppresses the autofill bar on mobile
 - Mobile nav: bottom bar (This Week | + | Focus Areas), text-only labels (no icons). Areas screen is a full-screen list of cards (same style as task cards)
 - The + button (mobile bottom nav) opens the unified "New" modal directly. Single modal with title, area selector, and a three-way toggle: This Week | Later | Habit. Selecting Habit reveals the weekly target counter. Modal has "Create new" header.
 - "Completed ›" link appears at the right of the area/all-tasks header on mobile; back arrow returns to open tasks

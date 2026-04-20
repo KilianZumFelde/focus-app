@@ -38,8 +38,8 @@ soft colors, lots of whitespace, intuitive without explanation. Single user, no 
 - No description, no due date, no editing after creation
 - Done / not-done status
 - Tap to complete (inline popup with confirm). Completion triggers a two-step animation: green flash (~300ms) then card collapses and fades (~300ms), then moves to Completed
-- **This Week flag** — marks a task for the weekly focus view. In area view: long-press card to toggle. In This Week view: swipe left to remove from week.
-- Swipe left to delete in area and completed views
+- **This Week flag** — marks a task for the weekly focus view. Tap is context-aware: if not in This Week, tap shows "Add to This Week?"; if already in This Week, tap shows "Complete task?". In This Week view: swipe left to remove from week.
+- On mobile, swipe left to delete if the task is not in This Week; swipe left to remove from This Week if it is flagged. In completed view: swipe left to delete permanently.
 
 ---
 
@@ -47,7 +47,7 @@ soft colors, lots of whitespace, intuitive without explanation. Single user, no 
 Recurring items that reset every Monday.
 
 - Fields: title, area, weekly target (number)
-- Counter tracks progress (e.g. 3 / 6). Tap card to open counter popup with +/− buttons
+- Counter tracks progress (e.g. 3 / 6). Tap card to open counter popup with +/− buttons, Confirm and Cancel. Cancel snaps the count back to what it was before opening.
 - When counter reaches target: card shows as done visually, stays in the list
 - Progress bar: a thin 4px bar below the area tag fills proportional to count/target. Area color when in progress, green when done. Animates on update.
 - Reset every Monday on app open — all counters back to 0
