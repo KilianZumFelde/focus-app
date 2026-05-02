@@ -40,6 +40,7 @@ const DEFAULT_STATE = {
   ],
   tasks: [],
   habits: [],
+  weeklyStats: [],
   currentView: 'this-week',
 };
 
@@ -58,6 +59,12 @@ function loadState() {
       if (parsed.goals && !parsed.habits) {
         parsed.habits = parsed.goals;
         delete parsed.goals;
+      }
+      // Migration: initialize weeklyStats if missing from old saves
+      if (!parsed.weeklyStats) parsed.weeklyStats = [];
+      // Guard: don't persist statistics views across sessions
+      if (parsed.currentView === 'statistics' || parsed.currentView === 'statistics-drill') {
+        parsed.currentView = 'this-week';
       }
       state = { ...DEFAULT_STATE, ...parsed };
     }
@@ -120,6 +127,22 @@ function resetHabitsIfNewWeek() {
         thisWeekTasksTotal,
         incompleteThisWeekIds,
       };
+    }
+
+    // Snapshot: capture closed week into weeklyStats (before counters reset)
+    const alreadySnapped = state.weeklyStats.some(w => w.weekStart === prevWeekKey);
+    if (!alreadySnapped && !DEBUG_WEEKLY_REVIEW) {
+      const habitsSnapshot = state.habits.map(h => ({
+        id:     h.id,
+        title:  h.title,
+        areaId: h.areaId,
+        count:  h.count,
+        target: h.target,
+      }));
+      const tasksCompleted = state.tasks
+        .filter(t => t.done && t.completedInWeek === prevWeekKey)
+        .map(t => ({ id: t.id, title: t.title, areaId: t.areaId }));
+      state.weeklyStats.push({ weekStart: prevWeekKey, habitsSnapshot, tasksCompleted });
     }
 
     // Reset habits
@@ -1174,6 +1197,7 @@ function exportData() {
     areas: state.areas,
     tasks: state.tasks,
     habits: state.habits,
+    weeklyStats: state.weeklyStats,
   };
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
@@ -1198,6 +1222,7 @@ function importData(file) {
       state.areas = data.areas;
       state.tasks = data.tasks;
       state.habits = data.habits || data.goals; // data.goals: backward compat with old backups
+      state.weeklyStats = data.weeklyStats || [];
       commit();
       closeDataMenu();
     } catch {
@@ -1667,6 +1692,227 @@ function openNewModalPrefilled(data) {
   inp.setSelectionRange(inp.value.length, inp.value.length);
 }
 
+// ─── Mobile bottom sheet ─────────────────────────────────────────────────────
+
+function openBottomSheet() {
+  document.getElementById('bottom-sheet-overlay').classList.remove('hidden');
+  document.getElementById('bottom-sheet').classList.remove('hidden');
+}
+
+function closeBottomSheet() {
+  document.getElementById('bottom-sheet').classList.add('hidden');
+  document.getElementById('bottom-sheet-overlay').classList.add('hidden');
+}
+
+// ─── Statistics view ──────────────────────────────────────────────────────────
+
+let drilldownWeek = null;
+
+function showStatsScreen() {
+  document.getElementById('stats-screen').classList.remove('hidden');
+  renderStatistics();
+}
+
+function hideStatsScreen() {
+  document.getElementById('stats-screen').classList.add('hidden');
+}
+
+function showDrillScreen(weekEntry) {
+  drilldownWeek = weekEntry;
+  document.getElementById('drill-screen').classList.remove('hidden');
+  renderDrilldown(weekEntry);
+}
+
+function hideDrillScreen() {
+  document.getElementById('drill-screen').classList.add('hidden');
+  drilldownWeek = null;
+}
+
+function formatWeekRange(weekStart) {
+  const [y, m, d] = weekStart.split('-').map(Number);
+  const start = new Date(y, m - 1, d);
+  const end   = new Date(y, m - 1, d + 6);
+  const mo = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const startStr = `${mo[start.getMonth()]} ${start.getDate()}`;
+  const endStr   = start.getMonth() === end.getMonth()
+    ? String(end.getDate())
+    : `${mo[end.getMonth()]} ${end.getDate()}`;
+  return `${startStr} – ${endStr}`;
+}
+
+function calculateStreak(habitId) {
+  const sorted = [...state.weeklyStats].sort((a, b) => b.weekStart.localeCompare(a.weekStart));
+  let streak = 0;
+  for (const week of sorted) {
+    const snap = week.habitsSnapshot.find(h => h.id === habitId);
+    if (!snap || snap.count < snap.target) break;
+    streak++;
+  }
+  return streak;
+}
+
+function renderStatistics() {
+  const body = document.getElementById('stats-screen-body');
+  body.innerHTML = '';
+
+  // Section 1: This week so far (always visible)
+  const thisWeekKey = getCurrentWeekKey();
+  const tasksDoneThisWeek = state.tasks.filter(t => t.done && t.completedInWeek === thisWeekKey).length;
+  const habitsOnTrack = state.habits.filter(h => h.count >= h.target).length;
+  const totalHabits   = state.habits.length;
+
+  const sec1 = document.createElement('div');
+  sec1.className = 'stats-section';
+  sec1.innerHTML = `
+    <div class="stats-section-title">This week so far</div>
+    <div class="stats-this-week-cards">
+      <div class="stats-card">
+        <div class="stats-card-number">${tasksDoneThisWeek}</div>
+        <div class="stats-card-label">tasks done</div>
+      </div>
+      <div class="stats-card">
+        <div class="stats-card-number">${habitsOnTrack}/${totalHabits}</div>
+        <div class="stats-card-label">habits on track</div>
+      </div>
+    </div>
+  `;
+  body.appendChild(sec1);
+
+  // Section 2: Past weeks (hidden only if no weeks AND no habits)
+  const hasAnyData = state.weeklyStats.length > 0 || state.habits.length > 0;
+  if (hasAnyData) {
+    const sec2 = document.createElement('div');
+    sec2.className = 'stats-section';
+    const title2 = document.createElement('div');
+    title2.className = 'stats-section-title';
+    title2.textContent = 'Past weeks';
+    sec2.appendChild(title2);
+
+    if (state.weeklyStats.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'stats-empty-text';
+      empty.textContent = 'your first week will appear here on monday';
+      sec2.appendChild(empty);
+    } else {
+      const sorted = [...state.weeklyStats].sort((a, b) => b.weekStart.localeCompare(a.weekStart));
+      sorted.forEach(week => {
+        const habitsComplete = week.habitsSnapshot.filter(h => h.count >= h.target).length;
+        const taskCount      = week.tasksCompleted.length;
+        const row = document.createElement('div');
+        row.className = 'stats-week-row';
+        row.innerHTML = `
+          <span class="stats-week-date">${formatWeekRange(week.weekStart)}</span>
+          <div class="stats-week-badges">
+            <span class="stats-badge stats-badge-tasks">${taskCount} task${taskCount !== 1 ? 's' : ''}</span>
+            <span class="stats-badge stats-badge-habits">${habitsComplete}/${week.habitsSnapshot.length} habits</span>
+          </div>
+          <span class="stats-week-chevron">›</span>
+        `;
+        row.addEventListener('click', () => showDrillScreen(week));
+        sec2.appendChild(row);
+      });
+    }
+    body.appendChild(sec2);
+  }
+
+  // Section 3: Habit streaks (hidden if no active habits)
+  if (state.habits.length > 0) {
+    const sec3 = document.createElement('div');
+    sec3.className = 'stats-section';
+    const title3 = document.createElement('div');
+    title3.className = 'stats-section-title';
+    title3.textContent = 'Habit streaks';
+    sec3.appendChild(title3);
+
+    state.habits.forEach(habit => {
+      const area   = state.areas.find(a => a.id === habit.areaId);
+      const streak = calculateStreak(habit.id);
+      const row = document.createElement('div');
+      row.className = 'stats-streak-row';
+      row.innerHTML = `
+        <div class="stats-streak-left">
+          <span class="stats-area-dot" style="background:${area ? area.color : '#ccc'}"></span>
+          <div class="stats-streak-names">
+            <div class="stats-habit-name">${escapeHtml(habit.title)}</div>
+            <div class="stats-habit-area">${area ? escapeHtml(area.name) : ''}</div>
+          </div>
+        </div>
+        <div class="stats-streak-pill">
+          <span class="stats-streak-dot" style="background:${streak > 0 ? '#639922' : '#E24B4A'}"></span>
+          <span>${streak} week${streak !== 1 ? 's' : ''}</span>
+        </div>
+      `;
+      sec3.appendChild(row);
+    });
+    body.appendChild(sec3);
+  }
+}
+
+function renderDrilldown(week) {
+  document.getElementById('drill-screen-title').textContent = formatWeekRange(week.weekStart);
+  const body = document.getElementById('drill-screen-body');
+  body.innerHTML = '';
+
+  // Habits subsection
+  if (week.habitsSnapshot.length > 0) {
+    const sec = document.createElement('div');
+    sec.className = 'stats-section';
+    const title = document.createElement('div');
+    title.className = 'stats-section-title';
+    title.textContent = 'Habits';
+    sec.appendChild(title);
+
+    week.habitsSnapshot.forEach(snap => {
+      const area      = state.areas.find(a => a.id === snap.areaId);
+      const areaColor = area ? area.color : '#ccc';
+      const isDone    = snap.count >= snap.target;
+      const progress  = snap.target > 0 ? Math.min(snap.count / snap.target, 1) : 0;
+      const fillColor = isDone ? '#639922' : areaColor;
+
+      const row = document.createElement('div');
+      row.className = 'drill-habit-row';
+      row.innerHTML = `
+        <div class="drill-habit-top">
+          <span class="stats-area-dot" style="background:${areaColor}"></span>
+          <span class="drill-habit-name${isDone ? ' done' : ''}">${escapeHtml(snap.title)}</span>
+        </div>
+        <div class="drill-habit-count">${snap.count} / ${snap.target}</div>
+        <div class="drill-habit-bar-track">
+          <div class="drill-habit-bar-fill" style="background:${fillColor}"></div>
+        </div>
+      `;
+      sec.appendChild(row);
+      requestAnimationFrame(() => {
+        row.querySelector('.drill-habit-bar-fill').style.width = `${Math.round(progress * 100)}%`;
+      });
+    });
+    body.appendChild(sec);
+  }
+
+  // Tasks subsection
+  if (week.tasksCompleted.length > 0) {
+    const sec = document.createElement('div');
+    sec.className = 'stats-section';
+    const title = document.createElement('div');
+    title.className = 'stats-section-title';
+    title.textContent = 'Tasks completed';
+    sec.appendChild(title);
+
+    week.tasksCompleted.forEach(task => {
+      const area = state.areas.find(a => a.id === task.areaId);
+      const { tagBg, tagColor } = area ? getAreaColors(area) : { tagBg: '#eee', tagColor: '#666' };
+      const row = document.createElement('div');
+      row.className = 'drill-task-row';
+      row.innerHTML = `
+        <span class="drill-task-title">${escapeHtml(task.title)}</span>
+        ${area ? `<span class="drill-area-badge" style="background:${tagBg};color:${tagColor}">${escapeHtml(area.name)}</span>` : ''}
+      `;
+      sec.appendChild(row);
+    });
+    body.appendChild(sec);
+  }
+}
+
 // ─── Long-press wiring ────────────────────────────────────────────────────────
 
 function initVoiceLongPress() {
@@ -1749,8 +1995,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Header action buttons (static elements, toggled by updateViewHeader)
   document.getElementById('completed-link').addEventListener('click', () => { mobileShowCompleted = true; render(); });
-  document.getElementById('focus-data-link').addEventListener('click', openDataMenu);
+  document.getElementById('focus-data-link').addEventListener('click', openBottomSheet);
   document.getElementById('clear-completed-btn').addEventListener('click', clearCompleted);
+
+  // Mobile bottom sheet
+  document.getElementById('bottom-sheet-overlay').addEventListener('click', closeBottomSheet);
+  document.getElementById('sheet-statistics').addEventListener('click', () => {
+    closeBottomSheet();
+    showStatsScreen();
+  });
+  document.getElementById('sheet-export').addEventListener('click', () => {
+    closeBottomSheet();
+    exportData();
+  });
+  document.getElementById('sheet-import').addEventListener('click', () => {
+    closeBottomSheet();
+    document.getElementById('import-file-input').click();
+  });
+
+  // Statistics back buttons
+  document.getElementById('stats-back-btn').addEventListener('click', hideStatsScreen);
+  document.getElementById('drill-back-btn').addEventListener('click', hideDrillScreen);
 
   // New modal (unified task + habit)
   document.getElementById('new-modal-cancel').addEventListener('click', closeNewModal);

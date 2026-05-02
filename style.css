@@ -1195,3 +1195,363 @@ body {
 @media (min-width: 769px) {
   .voice-toast { bottom: 32px; }
 }
+
+/* ─── Mobile bottom sheet ───────────────────────────────────────────────────── */
+.bottom-sheet-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  z-index: 40;
+}
+
+.bottom-sheet-overlay.hidden { display: none; }
+
+.bottom-sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--surface);
+  border-radius: 14px 14px 0 0;
+  z-index: 41;
+  padding-bottom: env(safe-area-inset-bottom);
+  transform: translateY(100%);
+  transition: transform 0.28s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.bottom-sheet:not(.hidden) {
+  transform: translateY(0);
+}
+
+.bottom-sheet.hidden {
+  display: block !important;
+  transform: translateY(100%);
+  pointer-events: none;
+}
+
+.bottom-sheet-handle {
+  width: 32px;
+  height: 3px;
+  background: var(--border);
+  border-radius: 2px;
+  margin: 12px auto 4px;
+}
+
+.bottom-sheet-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 48px;
+  padding: 10px 20px;
+  background: none;
+  border: none;
+  border-top: 0.5px solid var(--border);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-primary);
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  transition: background 0.12s;
+}
+
+.bottom-sheet-item:active { background: var(--bg); }
+
+.bottom-sheet-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.bottom-sheet-label {
+  flex: 1;
+}
+
+/* ─── Statistics & drill-down screens ──────────────────────────────────────── */
+@media (max-width: 768px) {
+
+  .stats-screen {
+    position: fixed;
+    inset: 0;
+    bottom: 64px;
+    background: var(--bg);
+    z-index: 10;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .stats-screen.hidden { display: none; }
+
+  .stats-screen-header {
+    padding: 28px 20px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    min-height: 64px;
+  }
+
+  .stats-screen-header .back-btn {
+    position: absolute;
+    left: 12px;
+    bottom: auto;
+    right: auto;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text-primary);
+    padding: 4px 8px;
+  }
+
+  .stats-screen-header h2 {
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: -0.3px;
+    color: var(--text-primary);
+  }
+
+  .stats-screen-body {
+    flex: 1;
+    padding: 8px 0 32px;
+  }
+
+  /* ─── Stats: section headers ─── */
+  .stats-section-title {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    padding: 20px 20px 8px;
+  }
+
+  .stats-section {
+    border-bottom: 0.5px solid var(--border);
+    margin-bottom: 0;
+  }
+
+  /* ─── Stats: this week cards ─── */
+  .stats-this-week-cards {
+    display: flex;
+    gap: 8px;
+    padding: 0 16px 16px;
+  }
+
+  .stats-card {
+    flex: 1;
+    background: var(--surface);
+    border-radius: 10px;
+    padding: 10px 12px;
+  }
+
+  .stats-card-number {
+    font-size: 22px;
+    font-weight: 500;
+    color: var(--text-primary);
+    line-height: 1.2;
+  }
+
+  .stats-card-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 3px;
+  }
+
+  /* ─── Stats: past weeks rows ─── */
+  .stats-week-row {
+    display: flex;
+    align-items: center;
+    padding: 14px 20px;
+    border-bottom: 0.5px solid var(--border);
+    cursor: pointer;
+    gap: 10px;
+  }
+
+  .stats-week-row:active { background: var(--surface); }
+
+  .stats-week-date {
+    font-size: 13px;
+    color: var(--text-primary);
+    flex: 1;
+  }
+
+  .stats-week-badges {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .stats-badge {
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 20px;
+  }
+
+  .stats-badge-tasks {
+    background: #E6F1FB;
+    color: #0C447C;
+  }
+
+  .stats-badge-habits {
+    background: #EAF3DE;
+    color: #27500A;
+  }
+
+  .stats-week-chevron {
+    font-size: 16px;
+    color: var(--text-muted);
+  }
+
+  .stats-empty-text {
+    font-size: 13px;
+    color: var(--text-muted);
+    padding: 16px 20px;
+  }
+
+  /* ─── Stats: habit streak rows ─── */
+  .stats-streak-row {
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    border-bottom: 0.5px solid var(--border);
+    gap: 10px;
+  }
+
+  .stats-streak-left {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .stats-area-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .stats-streak-names {
+    min-width: 0;
+  }
+
+  .stats-habit-name {
+    font-size: 13px;
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .stats-habit-area {
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+  }
+
+  .stats-streak-pill {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: var(--bg);
+    font-size: 12px;
+    color: var(--text-primary);
+    padding: 3px 10px;
+    border-radius: 20px;
+    flex-shrink: 0;
+  }
+
+  .stats-streak-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* ─── Drill-down: habit rows ─── */
+  .drill-habit-row {
+    padding: 14px 20px;
+    border-bottom: 0.5px solid var(--border);
+  }
+
+  .drill-habit-top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+
+  .drill-habit-name {
+    font-size: 13px;
+    color: var(--text-primary);
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .drill-habit-name.done {
+    text-decoration: line-through;
+    color: var(--text-secondary);
+  }
+
+  .drill-habit-count {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 5px;
+    padding-left: 15px;
+  }
+
+  .drill-habit-bar-track {
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-left: 15px;
+  }
+
+  .drill-habit-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    width: 0;
+    transition: width 0.3s ease;
+  }
+
+  /* ─── Drill-down: task rows ─── */
+  .drill-task-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    border-bottom: 0.5px solid var(--border);
+    gap: 10px;
+  }
+
+  .drill-task-title {
+    font-size: 13px;
+    color: var(--text-secondary);
+    text-decoration: line-through;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .drill-area-badge {
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 20px;
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+}

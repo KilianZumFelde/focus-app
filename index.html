@@ -101,13 +101,65 @@
     </button>
   </nav>
 
-  <!-- Data menu (long-press focus. title) -->
+  <!-- Data menu (long-press focus. title — desktop only) -->
   <div class="data-menu hidden" id="data-menu">
     <button class="data-menu-item" id="data-export">Export data</button>
     <button class="data-menu-item" id="data-import">Import data</button>
   </div>
   <div class="data-menu-overlay hidden" id="data-menu-overlay"></div>
   <input type="file" id="import-file-input" accept=".json" style="display:none">
+
+  <!-- Statistics view (mobile) -->
+  <div class="stats-screen hidden" id="stats-screen">
+    <div class="stats-screen-header">
+      <button class="back-btn" id="stats-back-btn">←</button>
+      <h2>statistics</h2>
+    </div>
+    <div class="stats-screen-body" id="stats-screen-body"></div>
+  </div>
+
+  <!-- Week drill-down view (mobile) -->
+  <div class="stats-screen hidden" id="drill-screen">
+    <div class="stats-screen-header">
+      <button class="back-btn" id="drill-back-btn">←</button>
+      <h2 id="drill-screen-title"></h2>
+    </div>
+    <div class="stats-screen-body" id="drill-screen-body"></div>
+  </div>
+
+  <!-- Mobile bottom sheet (tap focus. in header) -->
+  <div class="bottom-sheet-overlay hidden" id="bottom-sheet-overlay"></div>
+  <div class="bottom-sheet hidden" id="bottom-sheet">
+    <div class="bottom-sheet-handle"></div>
+    <button class="bottom-sheet-item" id="sheet-statistics">
+      <span class="bottom-sheet-icon" style="background:#E6F1FB">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="1" y="9" width="3" height="6" rx="1" fill="#2B6CB0"/>
+          <rect x="6" y="5" width="3" height="10" rx="1" fill="#2B6CB0"/>
+          <rect x="11" y="1" width="3" height="14" rx="1" fill="#2B6CB0"/>
+        </svg>
+      </span>
+      <span class="bottom-sheet-label">Statistics</span>
+    </button>
+    <button class="bottom-sheet-item" id="sheet-export">
+      <span class="bottom-sheet-icon" style="background:#EAF3DE">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M8 2v8M5 7l3 3 3-3" stroke="#3A6B12" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M2 11v2a1 1 0 001 1h10a1 1 0 001-1v-2" stroke="#3A6B12" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </span>
+      <span class="bottom-sheet-label">Export data</span>
+    </button>
+    <button class="bottom-sheet-item" id="sheet-import">
+      <span class="bottom-sheet-icon" style="background:#FAEEDA">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M8 10V2M5 5l3-3 3 3" stroke="#8B5E00" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M2 11v2a1 1 0 001 1h10a1 1 0 001-1v-2" stroke="#8B5E00" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </span>
+      <span class="bottom-sheet-label">Import data</span>
+    </button>
+  </div>
 
   <!-- New Modal -->
   <div id="new-modal" class="modal hidden">
